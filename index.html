@@ -1,0 +1,2451 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق القرعة العشوائية الفاخر</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="icon" href="https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/%D8%B5%D9%88%D8%B1%20%D8%A7%D9%84%D9%82%D8%B1%D8%B9%D9%87%2F656ceed7-79c9-4f96-88d9-305066fcafd8%20(1).png?alt=media&token=42580a66-37c4-4b4a-a601-49e60a3b868e" type="image/png">
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('./service-worker.js')
+                .then(() => console.log('Service Worker Registered'))
+                .catch((error) => console.error('Service Worker Registration Failed:', error));
+        }
+    </script>
+    <style>
+        :root {
+            --primary-color: #3b82f6;
+            --secondary-color: #10b981;
+            --accent-color: #f59e0b;
+            --background-color: #f0f9ff;
+            --text-color: #1e3a8a;
+            --winner-color: #ef4444;
+            --error-color: #dc2626;
+            --sidebar-width: 350px;
+            --header-height: 5rem;
+            --border-radius: 1rem;
+            --box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: linear-gradient(135deg, #e0f2fe 0%, #ffffff 100%);
+            color: var(--text-color);
+            line-height: 1.8;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            animation: fadeInPage 0.8s ease-in;
+            overflow-x: hidden;
+        }
+
+        @keyframes fadeInPage {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .header {
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 0 3rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            height: var(--header-height);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 900;
+        }
+
+        .menu-icon {
+            font-size: 1.75rem;
+            cursor: pointer;
+            transition: var(--transition);
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .menu-icon:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+
+        .app-title {
+            font-size: 1.75rem;
+            font-weight: 900;
+            letter-spacing: 1px;
+            background: linear-gradient(90deg, #ffffff, #f0f9ff);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+
+
+
+
+        .fullscreen-winner {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background-color: rgba(0, 0, 0, 0.85);
+                    z-index: 2000;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    animation: fadeIn 0.5s ease;
+                    backdrop-filter: blur(10px);
+                }
+                
+                .fullscreen-winner.fade-out {
+                    animation: fadeOut 0.5s ease forwards;
+                }
+                
+                @keyframes fadeOut {
+                    from { opacity: 1; }
+                    to { opacity: 0; }
+                }
+                
+                .fullscreen-winner-content {
+                    position: relative;
+                    width: 100%;
+                    height: 100%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    overflow: hidden;
+                }
+                
+                .fullscreen-winner-content img {
+                    max-width: 100%;
+                    max-height: 100%;
+                    object-fit: contain;
+                    animation: zoomIn 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                }
+                
+                @keyframes zoomIn {
+                    from { transform: scale(0.5); opacity: 0; }
+                    to { transform: scale(1); opacity: 1; }
+                }
+                
+                .fullscreen-winner-overlay {
+                    position: absolute;
+                    bottom: 0;
+                    left: 0;
+                    width: 100%;
+                    padding: 2rem;
+                    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+                    color: white;
+                    text-align: center;
+                    animation: slideUp 0.8s ease;
+                }
+                
+                @keyframes slideUp {
+                    from { transform: translateY(100%); opacity: 0; }
+                    to { transform: translateY(0); opacity: 1; }
+                }
+                
+                .fullscreen-winner-overlay h2 {
+                    font-size: 3rem;
+                    margin-bottom: 1rem;
+                    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+                    color: white;
+                }
+                
+                .close-fullscreen {
+                    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+                    color: white;
+                    border: none;
+                    padding: 1rem 2rem;
+                    border-radius: 9999px;
+                    font-size: 1.25rem;
+                    font-weight: bold;
+                    cursor: pointer;
+                    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+                    transition: all 0.3s ease;
+                    margin-top: 1rem;
+                }
+                
+                .close-fullscreen:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+                }
+                
+                .around-confetti {
+                    position: absolute;
+                    pointer-events: none;
+                    z-index: 1;
+                }
+                
+                /* تحسينات على كارت الفائز */
+                .winner-card {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    animation: winnerCardAppear 0.8s cubic-bezier(0.26, 0.53, 0.74, 1.48) forwards;
+                    opacity: 0;
+                    transform: scale(0.8) translateY(30px);
+                    position: relative;
+                    width: 100%;
+                    max-width: 24rem;
+                }
+                
+                .winner-image-container {
+                    width: 100%;
+                    height: 24rem;
+                    overflow: hidden;
+                    position: relative;
+                    border-radius: 1.5rem;
+                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+                    transform-style: preserve-3d;
+                    perspective: 1000px;
+                }
+                
+                .winner-image-container img {
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    transition: transform 0.5s ease;
+                    cursor: pointer;
+                }
+                
+                .winner-image-container:hover img {
+                    transform: scale(1.05);
+                }
+                
+                .winner-name-container {
+                    width: 100%;
+                    height: 24rem;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: linear-gradient(135deg, #f0f9ff, #e6f0f8);
+                    border-radius: 1.5rem;
+                    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+                    overflow: hidden;
+                }
+                
+                .winner-name-container span {
+                    font-size: 3rem;
+                    font-weight: bold;
+                    color: var(--primary-color);
+                    text-align: center;
+                    padding: 2rem;
+                    text-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+                }
+                
+                /* تحديث أسلوب عرض الفائزين */
+                .winners-container {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr));
+                    gap: 3rem;
+                    width: 100%;
+                    margin: 3rem 0;
+                    z-index: 1;
+
+                }
+
+
+
+        .container {
+            max-width: 1200px;
+            width: 90%;
+            margin: calc(var(--header-height) + 2rem) auto 3rem;
+            padding: 2.5rem;
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.1), transparent 60%),
+                         radial-gradient(circle at bottom left, rgba(16, 185, 129, 0.1), transparent 60%);
+            z-index: -1;
+        }
+
+        .container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .lottery-type-switch {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 3rem;
+            background-color: #f3f4f6;
+            border-radius: 9999px;
+            padding: 0.5rem;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .switch-btn {
+            padding: 1rem 2rem;
+            margin: 0 0.5rem;
+            background-color: transparent;
+            color: var(--text-color);
+            border: none;
+            border-radius: 9999px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: var(--transition);
+        }
+
+        .switch-btn.active {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .switch-btn:hover:not(.active) {
+            background-color: rgba(0, 0, 0, 0.05);
+            transform: translateY(-2px);
+        }
+
+        .file-input-wrapper {
+            margin-bottom: 2rem;
+            width: 100%;
+        }
+
+        .main-buttons {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            border: none;
+            padding: 1.25rem 2.5rem;
+            border-radius: 9999px;
+            cursor: pointer;
+            font-size: 1.25rem;
+            font-weight: bold;
+            transition: var(--transition);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn i {
+            margin-left: 1rem;
+            font-size: 1.5rem;
+        }
+
+        .btn:disabled {
+            background: linear-gradient(45deg, #94a3b8, #cbd5e1);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .image-preview {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1.5rem;
+            margin-top: 3rem;
+            width: 100%;
+        }
+
+        .image-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 1rem;
+            overflow: hidden;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            transition: var(--transition);
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .image-item:hover {
+            transform: scale(1.05) rotate(3deg);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1;
+        }
+
+        .image-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition);
+        }
+
+        .image-item:hover img {
+            transform: scale(1.1);
+        }
+
+        .image-item .remove-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: rgba(239, 68, 68, 0.9);
+            color: white;
+            border: none;
+            border-radius: 9999px;
+            width: 2rem;
+            height: 2rem;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+            z-index: 2;
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        .image-item:hover .remove-btn {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .image-item .remove-btn:hover {
+            background-color: rgb(239, 68, 68);
+            transform: scale(1.2);
+        }
+
+        /* Names lottery section styles */
+        #namesLotterySection {
+            width: 100%;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        #namesInput {
+            width: 100%;
+            height: 10rem;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            border: 2px solid #d1d5db;
+            border-radius: 1rem;
+            resize: vertical;
+            transition: var(--transition);
+            font-family: 'Tajawal', sans-serif;
+            font-size: 1.1rem;
+        }
+
+        #namesInput:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+
+        #namesList {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 1rem;
+            max-height: 20rem;
+            overflow-y: auto;
+            background-color: #f8fafc;
+        }
+
+        .name-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            margin-bottom: 0.75rem;
+            background-color: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .name-item:hover {
+            background-color: #f0f9ff;
+            transform: translateX(5px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .name-item span {
+            font-weight: 500;
+            font-size: 1.1rem;
+        }
+
+        .remove-name {
+            background-color: #f87171;
+            color: white;
+            border: none;
+            border-radius: 9999px;
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 1.25rem;
+        }
+
+        .remove-name:hover {
+            background-color: #ef4444;
+            transform: scale(1.1);
+        }
+
+        /* Sidebar styles */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            right: calc(-1 * var(--sidebar-width));
+            width: var(--sidebar-width);
+            height: 100vh;
+            background-color: white;
+            box-shadow: -5px 0 25px rgba(0, 0, 0, 0.15);
+            transition: right 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+            overflow-y: auto;
+            padding: 3rem 2rem;
+        }
+
+        .sidebar.open {
+            right: 0;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 2rem;
+            font-size: 1.75rem;
+            color: var(--primary-color);
+            text-align: center;
+            position: relative;
+        }
+
+        .sidebar h2::after {
+            content: '';
+            position: absolute;
+            bottom: -0.75rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 2px;
+        }
+
+        .close-sidebar {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: var(--transition);
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+        }
+
+        .close-sidebar:hover {
+            color: var(--primary-color);
+            background-color: #f0f9ff;
+            transform: rotate(90deg);
+        }
+
+        .settings {
+            margin-bottom: 2.5rem;
+        }
+
+        .settings label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+
+        .settings .info-text {
+            font-size: 0.9rem;
+            color: #64748b;
+            margin-bottom: 0.75rem;
+        }
+
+        .settings input[type="number"] {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 0.75rem;
+            font-size: 1.1rem;
+            transition: var(--transition);
+            background-color: #f8fafc;
+        }
+
+        .settings input[type="number"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+            background-color: white;
+        }
+
+        .error-message {
+            color: var(--error-color);
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            animation: fadeIn 0.4s ease;
+            backdrop-filter: blur(8px);
+            overflow: hidden;
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 8vh auto;
+            padding: 3rem;
+            border-radius: 1.5rem;
+            width: 90%;
+            max-width: 50rem;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden;
+        }
+
+        .lottery-animation-modal {
+            background-color: rgba(255, 255, 255, 0.98);
+            padding: 2.5rem;
+            border-radius: 2rem;
+            overflow: visible;
+            box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
+        }
+
+        .lottery-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            position: relative;
+        }
+
+        .spinner-wrapper {
+            position: relative;
+            margin-bottom: 2rem;
+            perspective: 1000px;
+        }
+   /* Updated spinner styles for better image display */
+   .spinner-frame {
+        position: relative;
+        width: 100%;
+        max-width: 24rem;
+        height: 24rem;
+        border-radius: 1.5rem;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2), 
+                    0 0 0 0.75rem rgba(255, 255, 255, 0.8),
+                    0 0 0 1.5rem rgba(59, 130, 246, 0.2);
+        overflow: hidden;
+        transform-style: preserve-3d;
+        transform: rotateX(5deg);
+        background: linear-gradient(to bottom, #f0f9ff, #d4e8f9);
+        transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        margin: 0 auto;
+    }
+    
+    .spinner {
+        width: 100%;
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+        transform-style: preserve-3d;
+        perspective: 1000px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .image-list {
+        display: flex;
+        flex-direction: column;
+        animation: slideUp 3s linear infinite;
+        will-change: transform;
+        width: 100%;
+    }
+    
+    .image-list img, .image-list div {
+        width: 100%;
+        height: 24rem;
+        object-fit: cover;
+        transition: all 0.2s ease;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        margin: 0.5rem 0;
+        border-radius: 0.5rem;
+    }
+    
+    /* Add responsive styles for smaller screens */
+    @media (max-width: 768px) {
+        .spinner-frame {
+            height: 18rem;
+        }
+        
+        .image-list img, .image-list div {
+            height: 18rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .spinner-frame {
+            height: 16rem;
+        }
+        
+        .image-list img, .image-list div {
+            height: 16rem;
+        }
+    }
+    
+    /* Update the spinner wrapper to be more responsive */
+    .spinner-wrapper {
+        position: relative;
+        margin-bottom: 2rem;
+        perspective: 1000px;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+    
+    /* Update the modal content to be more responsive */
+    .lottery-animation-modal {
+        background-color: rgba(255, 255, 255, 0.98);
+        padding: 2rem;
+        border-radius: 2rem;
+        overflow: visible;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.35);
+        width: 100%;
+        max-width: 40rem;
+        margin: 0 auto;
+    }
+
+        .spinner-frame::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 30%;
+            background: linear-gradient(to bottom, 
+                rgba(255, 255, 255, 0.8) 0%, 
+                rgba(255, 255, 255, 0) 100%);
+            z-index: 5;
+            pointer-events: none;
+            border-top-left-radius: 1.5rem;
+            border-top-right-radius: 1.5rem;
+        }
+
+        .spinner-frame::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 30%;
+            background: linear-gradient(to top, 
+                rgba(0, 0, 0, 0.2) 0%, 
+                rgba(0, 0, 0, 0) 100%);
+            z-index: 5;
+            pointer-events: none;
+            border-bottom-left-radius: 1.5rem;
+            border-bottom-right-radius: 1.5rem;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(-5rem); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .close {
+            position: absolute;
+            right: 1.5rem;
+            top: 1.5rem;
+            font-size: 2.5rem;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: var(--transition);
+            width: 3rem;
+            height: 3rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            z-index: 20;
+            background-color: white;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .close:hover {
+            color: var(--primary-color);
+            background-color: #f0f9ff;
+            transform: rotate(90deg);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Spinner and countdown styles */
+        .spinner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .image-list {
+            display: flex;
+            flex-direction: column;
+            animation: slideUp 3s linear infinite;
+            will-change: transform;
+        }
+
+        .image-list img, .image-list div {
+            width: 100%;
+            height: 24rem;
+            object-fit: cover;
+            transition: all 0.2s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin: 0.5rem 0;
+            border-radius: 0.5rem;
+        }
+
+        @keyframes slideUp {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(-100%); }
+        }
+
+        /* Highlight effect for the selected item */
+        .highlight-winner {
+            animation: highlightWinner 0.5s ease-in-out;
+        }
+
+        @keyframes highlightWinner {
+            0% { transform: scale(0.95); filter: brightness(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            25% { transform: scale(1.1); filter: brightness(1.5); box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+            50% { transform: scale(1.05); filter: brightness(1.3); box-shadow: 0 0 30px rgba(239, 68, 68, 0.8); }
+            75% { transform: scale(1.08); filter: brightness(1.4); box-shadow: 0 0 20px rgba(239, 68, 68, 0.6); }
+            100% { transform: scale(1); filter: brightness(1.2); box-shadow: 0 0 10px rgba(239, 68, 68, 0.4); }
+        }
+        
+        /* مؤثرات إضافية للفائز */
+        .highlight-winner {
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 0 30px rgba(239, 68, 68, 0.8), 0 0 60px rgba(255, 165, 0, 0.6);
+            animation: highlightWinner 1.5s ease-in-out forwards;
+        }
+        
+        .highlight-winner::before {
+            content: '';
+            position: absolute;
+            top: -10px;
+            left: -10px;
+            right: -10px;
+            bottom: -10px;
+            border: 5px solid gold;
+            border-radius: 1rem;
+            animation: pulseGold 1.5s ease-in-out infinite;
+            z-index: -1;
+        }
+        
+        @keyframes pulseGold {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .countdown-wrapper {
+            position: relative;
+            margin-top: 1rem;
+            text-align: center;
+        }
+
+        .countdown {
+            font-size: 6rem;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 1rem 0;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            position: relative;
+            display: inline-block;
+            transition: all 0.3s ease;
+            transform-origin: center;
+        }
+
+        .countdown.pulse {
+            animation: pulsate 0.5s ease-in-out;
+        }
+
+        @keyframes pulsate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .countdown::after {
+            content: '';
+            position: absolute;
+            bottom: -0.75rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            border-radius: 3px;
+            box-shadow: 0 2px 10px rgba(59, 130, 246, 0.4);
+        }
+
+        #countdownText {
+            font-size: 1.75rem;
+            font-weight: bold;
+            color: var(--text-color);
+            margin-top: 0.5rem;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Winner modal styles */
+        .winner-modal {
+            background: radial-gradient(circle at center, #ef4444 0%, #b91c1c 100%);
+            padding: 3rem;
+            border-radius: 1.5rem;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            animation: popIn 0.8s cubic-bezier(0.26, 0.53, 0.74, 1.48);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.1); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .winner-modal::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+            opacity: 0.3;
+            z-index: 0;
+        }
+
+        .winners-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+            margin: 2rem 0;
+            z-index: 1;
+            position: relative;
+        }
+
+        .winner-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            animation: winnerCardAppear 0.8s cubic-bezier(0.26, 0.53, 0.74, 1.48) forwards;
+            opacity: 0;
+            transform: scale(0.8) translateY(30px);
+            perspective: 1000px;
+        }
+
+        @keyframes winnerCardAppear {
+            0% { opacity: 0; transform: scale(0.8) translateY(30px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .winner-card:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .winner-card:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        .winner-card img {
+            width: 20rem;
+            height: 20rem;
+            border-radius: 1rem;
+            object-fit: cover;
+            border: 0.75rem solid white;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4),
+                        0 0 0 2px rgba(255, 255, 255, 0.6),
+                        0 0 30px rgba(255, 255, 255, 0.8);
+            transition: var(--transition);
+            transform-style: preserve-3d;
+            perspective: 1000px;
+            animation: winnerImageReveal 1s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            opacity: 0;
+            transform: translateZ(-100px) rotateY(-10deg);
+            cursor: pointer;
+        }
+
+        @keyframes winnerImageReveal {
+            0% { opacity: 0; transform: translateZ(-100px) rotateY(-10deg); }
+            60% { opacity: 1; transform: translateZ(50px) rotateY(15deg); }
+            100% { opacity: 1; transform: translateZ(0) rotateY(0); }
+        }
+
+        .winner-card:hover img {
+            transform: scale(1.05) rotateY(12deg) translateZ(30px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5),
+                        0 0 0 2px rgba(255, 255, 255, 0.8),
+                        0 0 40px rgba(255, 255, 255, 0.9);
+        }
+
+        .winner-card p {
+            margin-top: 1.5rem;
+            font-size: 1.75rem;
+            font-weight: bold;
+            color: white;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+            opacity: 0;
+            animation: fadeIn 0.5s ease-out 0.8s forwards;
+        }
+
+        .winner-modal h2 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            text-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+
+             }
+
+        /* Confetti styles */
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            z-index: 1000;
+            animation: confetti 5s ease-in-out infinite, confettiSway 2s ease-in-out infinite;
+        }
+
+        @keyframes confetti {
+            0% { transform: translateY(-10vh) rotateZ(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotateZ(720deg); opacity: 0; }
+        }
+
+        @keyframes confettiSway {
+            0%, 100% { margin-left: 0; }
+            50% { margin-left: 30px; }
+        }
+
+        /* Footer styles */
+        .footer {
+            text-align: center;
+            padding: 1.5rem;
+            background: linear-gradient(90deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            font-size: 1rem;
+            margin-top: auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Video modal styles */
+        .video-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            align-items: center;
+            justify-content: center;
+            z-index: 1100;
+            backdrop-filter: blur(10px);
+        }
+
+        .video-modal-content {
+            position: relative;
+            width: 90%;
+            max-width: 64rem;
+            background: white;
+            padding: 2rem;
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            animation: fadeInScale 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes fadeInScale {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .video-modal iframe {
+            width: 100%;
+            height: 36rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .close-video {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 2rem;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: var(--transition);
+            width: 2.5rem;
+            height: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background-color: white;
+            z-index: 10;
+        }
+
+        .close-video:hover {
+            color: var(--primary-color);
+            transform: rotate(90deg);
+            background-color: #f0f9ff;
+        }
+
+        /* Responsive styles */
+        @media (max-width: 1200px) {
+            .container {
+                width: 95%;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .header {
+                padding: 0 1.5rem;
+            }
+            
+            .app-title {
+                font-size: 1.5rem;
+            }
+            
+            .container {
+                padding: 2rem;
+            }
+            
+            .spinner {
+                width: 14rem;
+                height: 14rem;
+            }
+            
+            .image-list img {
+                height: 14rem;
+            }
+            
+            .winner-card img {
+                width: 14rem;
+                height: 14rem;
+            }
+            
+            .video-modal iframe {
+                height: 32rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            :root {
+                --sidebar-width: 100vw;
+            }
+            
+            .header {
+                padding: 0 1rem;
+            }
+            
+            .app-title {
+                font-size: 1.25rem;
+            }
+            
+            .container {
+                padding: 1.5rem;
+                margin-top: calc(var(--header-height) + 1rem);
+            }
+            
+            .modal-content {
+                width: 95%;
+                padding: 2rem;
+                margin: 5% auto;
+            }
+            
+            .spinner {
+                width: 12rem;
+                height: 12rem;
+            }
+            
+            .image-list img {
+                height: 12rem;
+            }
+            
+            .countdown {
+                font-size: 4rem;
+            }
+            
+            .winner-modal h2 {
+                font-size: 2.5rem;
+            }
+            
+            .winner-card img {
+                width: 12rem;
+                height: 12rem;
+            }
+            
+            .btn {
+                font-size: 1.1rem;
+                padding: 1rem 2rem;
+            }
+            
+            .image-item {
+                width: 100%;
+            }
+            
+            .video-modal-content {
+                width: 95%;
+            }
+            
+            .video-modal iframe {
+                height: 24rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .header {
+                height: 4.5rem;
+            }
+            
+            .app-title {
+                font-size: 1.1rem;
+            }
+            
+            .container {
+                margin-top: calc(4.5rem + 1rem);
+                padding: 1.25rem;
+            }
+            
+            .spinner {
+                width: 10rem;
+                height: 10rem;
+            }
+            
+            .image-list img {
+                height: 10rem;
+            }
+            
+            .countdown {
+                font-size: 3rem;
+            }
+            
+            .winner-modal {
+                padding: 2rem;
+            }
+            
+            .winner-modal h2 {
+                font-size: 2rem;
+            }
+            
+            .winner-card img {
+                width: 10rem;
+                height: 10rem;
+            }
+            
+            .btn {
+                font-size: 1rem;
+                padding: 0.875rem 1.75rem;
+            }
+            
+            .switch-btn {
+                padding: 0.75rem 1.5rem;
+                font-size: 0.9rem;
+            }
+            
+            .video-modal iframe {
+                height: 18rem;
+            }
+        }
+
+        /* Custom scrollbar for webkit browsers */
+        ::-webkit-scrollbar {
+            width: 0.5rem;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 0.25rem;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 0.25rem;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+
+        /* Animation for drag and drop */
+        .drag-over {
+            background-color: rgba(16, 185, 129, 0.1);
+            border: 2px dashed var(--secondary-color);
+        }
+
+        /* Improved accessibility */
+        .btn:focus, .switch-btn:focus, .remove-name:focus, .close:focus, .close-video:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+        }
+
+        /* Modern input focus styles */
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="menu-icon" id="menuIcon">
+            <i class="fas fa-bars"></i>
+        </div>
+        <div class="app-title">تطبيق القرعة العشوائية الفاخر</div>
+    </header>
+
+    <div class="sidebar" id="sidebar">
+        <div class="close-sidebar" id="closeSidebar">
+            <i class="fas fa-times"></i>
+        </div>
+        <h2>إعدادات القرعة</h2>
+        <div class="settings">
+            <label for="winnersCount">عدد الفائزين:</label>
+            <div class="info-text">أدخل رقمًا بين 1 و 10</div>
+            <input type="number" id="winnersCount" min="1" max="10" value="1">
+            <div id="winnersCountError" class="error-message"></div>
+        </div>
+        <div class="settings">
+            <label for="duration">مدة القرعة (بالثواني):</label>
+            <div class="info-text">أدخل رقمًا بين 1 و 60</div>
+            <input type="number" id="duration" min="1" max="60" value="5">
+            <div id="durationError" class="error-message"></div>
+        </div>
+        <div class="settings">
+            <label for="winnerDisplayTime">مدة عرض الفائز (بالثواني):</label>
+            <div class="info-text">أدخل رقمًا بين 1 و 30</div>
+            <input type="number" id="winnerDisplayTime" min="1" max="30" value="8">
+            <div id="winnerDisplayTimeError" class="error-message"></div>
+        </div>
+        <div class="settings">
+            <label for="speed">سرعة تقلب الصور (بالثواني):</label>
+            <div class="info-text">أدخل رقمًا بين 1 و 10</div>
+            <input type="number" id="speed" min="1" max="10" value="3">
+            <div id="speedError" class="error-message"></div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="lottery-type-switch">
+            <button id="imagesLotteryBtn" class="switch-btn active">قرعة بالصور</button>
+            <button id="namesLotteryBtn" class="switch-btn">قرعة بالأسماء</button>
+        </div>
+
+        <div id="imagesLotterySection">
+            <div class="main-buttons">
+                <div class="file-input-wrapper">
+                    <button class="btn" id="uploadButton"><i class="fas fa-images"></i> اختر الصور</button>
+                    <input type="file" id="imageInput" accept="image/*" multiple style="display: none;">
+                </div>
+                <button class="btn" id="startButton" disabled><i class="fas fa-play"></i> بدء القرعة</button>
+            </div>
+            <div class="image-preview" id="imagePreview"></div>
+        </div>
+
+        <div id="namesLotterySection" style="display: none;">
+            <textarea id="namesInput" placeholder="أدخل الأسماء هنا، اسم واحد في كل سطر"></textarea>
+            <div class="main-buttons">
+                <button class="btn" id="addNamesButton"><i class="fas fa-plus"></i> إضافة الأسماء</button>
+                <button class="btn" id="startNamesButton" disabled><i class="fas fa-play"></i> بدء القرعة</button>
+            </div>
+            <div id="namesList"></div>
+        </div>
+    </div>
+
+    <div id="modal" class="modal">
+        <div class="modal-content lottery-animation-modal">
+            <span class="close" id="closeModal">&times;</span>
+            <div class="lottery-container">
+                <div class="spinner-wrapper">
+                    <div class="spinner-frame">
+                        <div class="spinner" id="spinner" style="display: flex; align-items: center; justify-content: center;">
+                            <div class="image-wrapper" style="width: 100%; height: 100%; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                                <img id="spinnerImage" src="" alt="صورة الفائز" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 1rem;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="countdown-wrapper">
+                    <div class="countdown" id="countdown"></div>
+                    <p id="countdownText">جاري اختيار الفائزين...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+                </div>
+                <div class="countdown-wrapper">
+                    <div class="countdown" id="countdown"></div>
+                    <p id="countdownText">جاري اختيار الفائزين...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="winnerModal" class="modal">
+        <div class="modal-content winner-modal">
+            <h2>تهانينا للفائزين!</h2>
+            <div id="winnersContainer" class="winners-container"></div>
+            <p>تم اختيار الفائزين. ألف مبروك!</p>
+        </div>
+    </div>
+
+    <div id="videoModal" class="video-modal" style="display: none;">
+        <div class="video-modal-content">
+            <span class="close-video" id="closeVideo">&times;</span>
+            <iframe id="videoIframe" src="https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/videos%2Flv_0_%D9%A2%D9%A0%D9%A2%D9%A4%D9%A0%D9%A9%D9%A1%D9%A2%D9%A0%D9%A2%D9%A5%D9%A4%D9%A1%D9%A7.mp4?alt=media&token=5ede2382-bbf5-4a1e-a18f-99fbcc0d81c7" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>© 2025 تطبيق القرعة العشوائية الفاخر. جميع الحقوق محفوظة.</p>
+    </footer>
+
+    <script>
+        let images = [];
+        let names = [];
+        let currentLotteryType = 'images'; // 'images' أو 'names'
+
+        // DOM عناصر 
+        const imageInput = document.getElementById('imageInput');
+        const imagePreview = document.getElementById('imagePreview');
+        const startButton = document.getElementById('startButton');
+        const startNamesButton = document.getElementById('startNamesButton');
+        const modal = document.getElementById('modal');
+        const closeModal = document.getElementById('closeModal');
+        const winnerModal = document.getElementById('winnerModal');
+        const spinner = document.getElementById('spinner');
+        const countdown = document.getElementById('countdown');
+        const countdownText = document.getElementById('countdownText');
+        const durationInput = document.getElementById('duration');
+        const winnerDisplayTimeInput = document.getElementById('winnerDisplayTime');
+        const speedInput = document.getElementById('speed');
+        const durationError = document.getElementById('durationError');
+        const winnerDisplayTimeError = document.getElementById('winnerDisplayTimeError');
+        const speedError = document.getElementById('speedError');
+        const winnersCountInput = document.getElementById('winnersCount');
+        const winnersCountError = document.getElementById('winnersCountError');
+        const winnersContainer = document.getElementById('winnersContainer');
+        const sidebar = document.getElementById('sidebar');
+        const menuIcon = document.getElementById('menuIcon');
+        const closeSidebar = document.getElementById('closeSidebar');
+        const uploadButton = document.getElementById('uploadButton');
+        const videoModal = document.getElementById('videoModal');
+        const closeVideo = document.getElementById('closeVideo');
+
+        // أزرار التبديل بين أنواع القرعة
+        const imagesLotteryBtn = document.getElementById('imagesLotteryBtn');
+        const namesLotteryBtn = document.getElementById('namesLotteryBtn');
+        const imagesLotterySection = document.getElementById('imagesLotterySection');
+        const namesLotterySection = document.getElementById('namesLotterySection');
+
+        // عناصر القرعة بالأسماء
+        const namesInput = document.getElementById('namesInput');
+        const addNamesButton = document.getElementById('addNamesButton');
+        const namesList = document.getElementById('namesList');
+
+        // مستمعو الأحداث
+        imageInput.addEventListener('change', handleImageUpload);
+        startButton.addEventListener('click', startLottery);
+        startNamesButton.addEventListener('click', startLottery);
+        durationInput.addEventListener('input', validateInputs);
+        winnerDisplayTimeInput.addEventListener('input', validateInputs);
+        speedInput.addEventListener('input', validateInputs);
+        winnersCountInput.addEventListener('input', validateInputs);
+        menuIcon.addEventListener('click', toggleSidebar);
+        closeSidebar.addEventListener('click', toggleSidebar);
+        uploadButton.addEventListener('click', () => imageInput.click());
+        closeModal.addEventListener('click', () => modal.style.display = 'none');
+        closeVideo.addEventListener('click', () => videoModal.style.display = 'none');
+
+        // مستمعو الأحداث للقرعة
+        imagesLotteryBtn.addEventListener('click', () => switchLotteryType('images'));
+        namesLotteryBtn.addEventListener('click', () => switchLotteryType('names'));
+        addNamesButton.addEventListener('click', addNames);
+
+        // النقر خارج النوافذ المنبثقة
+        window.addEventListener('click', (e) => {
+            if (e.target === modal) modal.style.display = 'none';
+            if (e.target === winnerModal) winnerModal.style.display = 'none';
+            if (e.target === videoModal) videoModal.style.display = 'none';
+        });
+
+        function toggleSidebar() {
+            sidebar.classList.toggle('open');
+        }
+
+        function handleImageUpload(event) {
+            const files = event.target.files;
+            
+            if (files.length === 0) return;
+            
+            images = [];
+            imagePreview.innerHTML = '';
+
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                // التحقق من أن الملف صورة
+                if (!file.type.startsWith('image/')) {
+                    alert('الرجاء اختيار ملفات صور فقط.');
+                    continue;
+                }
+                
+                const reader = new FileReader();
+
+                reader.onload = function(e) {
+                    const index = images.length;
+                    images.push(e.target.result);
+                    createImagePreview(e.target.result, index);
+                };
+
+                reader.readAsDataURL(file);
+            }
+
+            validateInputs();
+        }
+
+        function createImagePreview(src, index) {
+            const imageItem = document.createElement('div');
+            imageItem.classList.add('image-item');
+            imageItem.dataset.index = index;
+
+            const img = document.createElement('img');
+            img.src = src;
+            img.alt = `صورة ${index + 1}`;
+            imageItem.appendChild(img);
+
+            const removeBtn = document.createElement('button');
+            removeBtn.classList.add('remove-btn');
+            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            removeBtn.onclick = (e) => {
+                e.stopPropagation();
+                removeImage(index);
+            };
+            imageItem.appendChild(removeBtn);
+
+            // تكبير الصورة عند النقر عليها
+            imageItem.addEventListener('click', () => showImagePreview(src));
+
+            imagePreview.appendChild(imageItem);
+            
+            // تحديث الازرار بعد إضافة الصور
+            validateInputs();
+        }
+
+        function showImagePreview(src) {
+            // إنشاء نافذة عرض الصورة المكبرة
+            const imgPreview = document.createElement('div');
+            imgPreview.style.position = 'fixed';
+            imgPreview.style.top = '0';
+            imgPreview.style.left = '0';
+            imgPreview.style.width = '100%';
+            imgPreview.style.height = '100%';
+            imgPreview.style.backgroundColor = 'rgba(0, 0, 0, 0.9)';
+            imgPreview.style.zIndex = '1100';
+            imgPreview.style.display = 'flex';
+            imgPreview.style.alignItems = 'center';
+            imgPreview.style.justifyContent = 'center';
+            imgPreview.style.cursor = 'pointer';
+            imgPreview.style.padding = '2rem';
+            imgPreview.style.backdropFilter = 'blur(10px)';
+            
+            const img = document.createElement('img');
+            img.src = src;
+            img.style.maxWidth = '90%';
+            img.style.maxHeight = '90%';
+            img.style.objectFit = 'contain';
+            img.style.borderRadius = '0.5rem';
+            img.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.3)';
+            img.style.transition = 'transform 0.3s ease';
+            
+            imgPreview.appendChild(img);
+            document.body.appendChild(imgPreview);
+            
+            // إغلاق النافذة بالنقر عليها
+            imgPreview.addEventListener('click', () => {
+                document.body.removeChild(imgPreview);
+            });
+        }
+
+        function removeImage(index) {
+            // إزالة الصورة من المصفوفة
+            images.splice(index, 1);
+            
+            // إعادة رسم معاينة الصور
+            imagePreview.innerHTML = '';
+            images.forEach((src, i) => {
+                createImagePreview(src, i);
+            });
+            
+            validateInputs();
+        }
+
+        function switchLotteryType(type) {
+            currentLotteryType = type;
+            
+            if (type === 'images') {
+                imagesLotteryBtn.classList.add('active');
+                namesLotteryBtn.classList.remove('active');
+                imagesLotterySection.style.display = 'block';
+                namesLotterySection.style.display = 'none';
+            } else {
+                imagesLotteryBtn.classList.remove('active');
+                namesLotteryBtn.classList.add('active');
+                imagesLotterySection.style.display = 'none';
+                namesLotterySection.style.display = 'block';
+            }
+            
+            validateInputs();
+        }
+
+        function addNames() {
+            const inputNames = namesInput.value.trim().split('\n').filter(name => name.trim() !== '');
+            
+            if (inputNames.length === 0) {
+                alert('الرجاء إدخال اسم واحد على الأقل.');
+                return;
+            }
+            
+            // إضافة الأسماء الجديدة
+            names = [...names, ...inputNames];
+            
+            // تحديث قائمة الأسماء
+            updateNamesList();
+            
+            // مسح حقل الإدخال
+            namesInput.value = '';
+            
+            validateInputs();
+        }
+
+        function updateNamesList() {
+            namesList.innerHTML = '';
+            
+            if (names.length === 0) {
+                namesList.innerHTML = '<p class="text-center text-gray-500">لا توجد أسماء مضافة بعد</p>';
+                return;
+            }
+            
+            names.forEach((name, index) => {
+                const nameItem = document.createElement('div');
+                nameItem.classList.add('name-item');
+                nameItem.style.animationDelay = `${index * 0.05}s`;
+                
+                nameItem.innerHTML = `
+                    <span>${name}</span>
+                    <button class="remove-name" data-index="${index}">×</button>
+                `;
+                
+                namesList.appendChild(nameItem);
+                
+                // إضافة حدث إزالة الاسم
+                const removeBtn = nameItem.querySelector('.remove-name');
+                removeBtn.addEventListener('click', () => removeName(index));
+            });
+        }
+
+        function removeName(index) {
+            // إزالة الاسم من المصفوفة
+            names.splice(index, 1);
+            
+            // تحديث قائمة الأسماء
+            updateNamesList();
+            
+            validateInputs();
+        }
+
+        function validateInputs() {
+            const duration = parseInt(durationInput.value);
+            const winnerDisplayTime = parseInt(winnerDisplayTimeInput.value);
+            const speed = parseInt(speedInput.value);
+            const winnersCount = parseInt(winnersCountInput.value);
+            let isValid = true;
+
+            // التحقق من مدة القرعة
+            if (isNaN(duration) || duration < 1 || duration > 60) {
+                durationError.textContent = 'الرجاء إدخال رقم بين 1 و 60';
+                isValid = false;
+            } else {
+                durationError.textContent = '';
+            }
+
+            // التحقق من مدة عرض الفائز
+            if (isNaN(winnerDisplayTime) || winnerDisplayTime < 1 || winnerDisplayTime > 30) {
+                winnerDisplayTimeError.textContent = 'الرجاء إدخال رقم بين 1 و 30';
+                isValid = false;
+            } else {
+                winnerDisplayTimeError.textContent = '';
+            }
+
+            // التحقق من سرعة التقلب
+            if (isNaN(speed) || speed < 1 || speed > 10) {
+                speedError.textContent = 'الرجاء إدخال رقم بين 1 و 10';
+                isValid = false;
+            } else {
+                speedError.textContent = '';
+            }
+
+            // التحقق من عدد الفائزين
+            if (isNaN(winnersCount) || winnersCount < 1 || winnersCount > 10) {
+                winnersCountError.textContent = 'الرجاء إدخال رقم بين 1 و 10';
+                isValid = false;
+            } else {
+                winnersCountError.textContent = '';
+            }
+
+            // تفعيل أو تعطيل زر البدء حسب نوع القرعة
+            if (currentLotteryType === 'images') {
+                startButton.disabled = !isValid || images.length === 0 || images.length < winnersCount;
+            } else {
+                startNamesButton.disabled = !isValid || names.length === 0 || names.length < winnersCount;
+            }
+        }
+
+        function startLottery() {
+            // عرض النافذة المنبثقة
+            modal.style.display = 'block';
+            
+            // بدء القرعة حسب النوع
+            if (currentLotteryType === 'images') {
+                startCarousel();
+            } else {
+                startNamesCarousel();
+            }
+        }
+
+        function startCarousel() {
+    spinner.innerHTML = '';
+    
+    // Create the moving image list
+    const imageList = document.createElement('div');
+    imageList.classList.add('image-list');
+
+    // Add images to the list with improved sizing
+    const shuffledImages = [...images].sort(() => Math.random() - 0.5);
+    shuffledImages.forEach((imageSrc) => {
+        const imgElement = document.createElement('img');
+        imgElement.src = imageSrc;
+        imgElement.style.width = '100%';
+        imgElement.style.objectFit = 'cover'; // Ensure the image fills the frame
+        imgElement.style.backgroundColor = '#ffffff'; // Add background to prevent transparency issues
+        imageList.appendChild(imgElement);
+    });
+
+    // Repeat images for continuous scrolling effect
+    for (let i = 0; i < 3; i++) {
+        shuffledImages.forEach((imageSrc) => {
+            const imgElement = document.createElement('img');
+            imgElement.src = imageSrc;
+            imgElement.style.width = '100%';
+            imgElement.style.objectFit = 'cover'; // Ensure the image fills the frame
+            imgElement.style.backgroundColor = '#ffffff'; // Add background
+            imageList.appendChild(imgElement);
+        });
+    }
+
+    spinner.appendChild(imageList);
+
+    // Set animation speed (reduced for slower movement)
+    imageList.style.animationDuration = `${parseInt(speedInput.value) + 2}s`;
+
+    // Start countdown
+    startCountdown();
+}
+
+// Update the freezeSpinnerOnWinner function for better display
+function freezeSpinnerOnWinner(winnerImage) {
+    // Stop image animation
+    const imageList = document.querySelector('.image-list');
+    if (imageList) {
+        imageList.style.animationPlayState = 'paused';
+        
+        // Add highlight effect to winner image and center it
+        setTimeout(() => {
+            const images = imageList.querySelectorAll('img');
+            let winnerImg = null;
+            
+            images.forEach(img => {
+                if (img.src === winnerImage) {
+                    img.classList.add('highlight-winner');
+                    winnerImg = img;
+                }
+            });
+            
+            if (winnerImg) {
+                // Calculate position to center the winner image
+                const imageListRect = imageList.getBoundingClientRect();
+                const imgRect = winnerImg.getBoundingClientRect();
+                const spinnerRect = spinner.getBoundingClientRect();
+                
+                const offsetY = spinnerRect.height / 2 - (imgRect.top - imageListRect.top) - imgRect.height / 2;
+                
+                // Apply smooth transition for centering
+                imageList.style.transition = 'transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                imageList.style.transform = `translateY(${offsetY}px)`;
+                
+                // Enhance the winner image display
+                winnerImg.style.transform = 'scale(1.05)';
+                winnerImg.style.boxShadow = '0 0 30px rgba(239, 68, 68, 0.8), 0 0 60px rgba(255, 165, 0, 0.6)';
+                winnerImg.style.zIndex = '10';
+                winnerImg.style.position = 'relative';
+            }
+        }, 500);
+    }
+}
+
+// Update the startNamesCarousel function similarly
+function startNamesCarousel() {
+    spinner.innerHTML = '';
+    
+    // Create the moving names list
+    const nameList = document.createElement('div');
+    nameList.classList.add('image-list');
+
+    // Get the spinner frame height dynamically for responsive design
+    const spinnerFrameHeight = window.getComputedStyle(document.querySelector('.spinner-frame')).height;
+    const nameHeight = parseInt(spinnerFrameHeight) || 24; // Default to 24rem if calculation fails
+
+    // Add names to the list with responsive sizing
+    const shuffledNames = [...names].sort(() => Math.random() - 0.5);
+    shuffledNames.forEach((name) => {
+        const nameElement = document.createElement('div');
+        nameElement.textContent = name;
+        nameElement.style.height = spinnerFrameHeight;
+        nameElement.style.width = '100%';
+        nameElement.style.display = 'flex';
+        nameElement.style.alignItems = 'center';
+        nameElement.style.justifyContent = 'center';
+        nameElement.style.fontSize = 'clamp(1.5rem, 5vw, 2rem)'; // Responsive font size
+        nameElement.style.fontWeight = 'bold';
+        nameElement.style.backgroundColor = '#f8fafc';
+        nameElement.style.color = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim();
+        nameElement.style.borderRadius = '0.5rem';
+        nameElement.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+        nameElement.style.margin = '0.5rem 0';
+        nameElement.style.padding = '1rem';
+        nameElement.style.textAlign = 'center';
+        nameElement.style.wordBreak = 'break-word'; // Handle long names
+        nameList.appendChild(nameElement);
+    });
+
+    // Repeat names for continuous scrolling
+    for (let i = 0; i < 3; i++) {
+        shuffledNames.forEach((name) => {
+            const nameElement = document.createElement('div');
+            nameElement.textContent = name;
+            nameElement.style.height = spinnerFrameHeight;
+            nameElement.style.width = '100%';
+            nameElement.style.display = 'flex';
+            nameElement.style.alignItems = 'center';
+            nameElement.style.justifyContent = 'center';
+            nameElement.style.fontSize = 'clamp(1.5rem, 5vw, 2rem)';
+            nameElement.style.fontWeight = 'bold';
+            nameElement.style.backgroundColor = '#f8fafc';
+            nameElement.style.color = getComputedStyle(document.documentElement).getPropertyValue('--text-color').trim();
+            nameElement.style.borderRadius = '0.5rem';
+            nameElement.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.1)';
+            nameElement.style.margin = '0.5rem 0';
+            nameElement.style.padding = '1rem';
+            nameElement.style.textAlign = 'center';
+            nameElement.style.wordBreak = 'break-word';
+            nameList.appendChild(nameElement);
+        });
+    }
+
+    spinner.appendChild(nameList);
+
+    // Set animation speed
+    nameList.style.animationDuration = `${speedInput.value}s`;
+
+    // Start countdown
+    startCountdown();
+}
+
+        function startCountdown() {
+            let count = parseInt(durationInput.value);
+            countdown.textContent = count;
+            
+            // تعطيل الأزرار أثناء القرعة
+            startButton.disabled = true;
+            startNamesButton.disabled = true;
+            
+            // تشغيل العد التنازلي
+            const countdownInterval = setInterval(function() {
+                count--;
+                countdown.textContent = count;
+                
+                if (count === 0) {
+                    clearInterval(countdownInterval);
+                    countdownText.textContent = 'تم اختيار الفائزين!';
+                    setTimeout(pickRandomWinners, 1000);
+                }
+            }, 1000);
+        }
+
+        function pickRandomWinners() {
+            const winnersCount = parseInt(winnersCountInput.value);
+            const winners = [];
+            
+            // نسخة من العناصر للاختيار منها
+            const sourceItems = currentLotteryType === 'images' ? [...images] : [...names];
+            
+            // اختيار الفائزين بشكل عشوائي
+            for (let i = 0; i < winnersCount; i++) {
+                if (sourceItems.length === 0) break;
+                
+                const randomIndex = Math.floor(Math.random() * sourceItems.length);
+                winners.push(sourceItems[randomIndex]);
+                sourceItems.splice(randomIndex, 1);
+            }
+
+            // مؤثر صوتي لإعلان الفائز
+            playWinnerSound();
+            
+            // إضافة مؤثر لتجميد الصورة المتحركة
+            if (currentLotteryType === 'images') {
+                freezeSpinnerOnWinner(winners[0]);
+            } else {
+                freezeSpinnerOnNameWinner(winners[0]);
+            }
+            
+            // تأخير صغير قبل إظهار نافذة الفائز
+            setTimeout(() => {
+                // إغلاق نافذة العد التنازلي وعرض نافذة الفائزين
+                modal.style.display = 'none';
+                winnerModal.style.display = 'block';
+                
+                // عرض الفائزين وإضافة التأثيرات
+                displayWinners(winners);
+                createConfetti();
+                
+                // إغلاق نافذة الفائزين بعد مدة محددة
+                setTimeout(function() {
+                    winnerModal.style.display = 'none';
+                    // إعادة تفعيل الأزرار
+                    validateInputs();
+                }, parseInt(winnerDisplayTimeInput.value) * 1000);
+            }, 1500);
+        }
+        
+        // تجميد الصور المتحركة على صورة الفائز
+        function freezeSpinnerOnWinner(winnerImage) {
+            // إيقاف تحريك الصور
+            const imageList = document.querySelector('.image-list');
+            if (imageList) {
+                imageList.style.animationPlayState = 'paused';
+                
+                // إضافة مؤثر توهج على الصورة الفائزة
+                setTimeout(() => {
+                    const images = imageList.querySelectorAll('img');
+                    images.forEach(img => {
+                        if (img.src === winnerImage) {
+                            img.classList.add('highlight-winner');
+                            
+                            // تحريك الصورة الفائزة إلى المركز
+                            const imageListRect = imageList.getBoundingClientRect();
+                            const imgRect = img.getBoundingClientRect();
+                            const spinnerRect = spinner.getBoundingClientRect();
+                            
+                            const offsetY = spinnerRect.height / 2 - (imgRect.top - imageListRect.top) - imgRect.height / 2;
+                            imageList.style.transform = `translateY(${offsetY}px)`;
+                        }
+                    });
+                }, 500);
+            }
+        }
+        
+        // تجميد الأسماء المتحركة على اسم الفائز
+        function freezeSpinnerOnNameWinner(winnerName) {
+            // إيقاف تحريك الأسماء
+            const nameList = document.querySelector('.image-list');
+            if (nameList) {
+                nameList.style.animationPlayState = 'paused';
+                
+                // إضافة مؤثر توهج على الاسم الفائز
+                setTimeout(() => {
+                    const nameElements = nameList.querySelectorAll('div');
+                    nameElements.forEach(nameEl => {
+                        if (nameEl.textContent === winnerName) {
+                            nameEl.classList.add('highlight-winner');
+                            
+                            // تحريك الاسم الفائز إلى المركز
+                            const nameListRect = nameList.getBoundingClientRect();
+                            const nameElRect = nameEl.getBoundingClientRect();
+                            const spinnerRect = spinner.getBoundingClientRect();
+                            
+                            const offsetY = spinnerRect.height / 2 - (nameElRect.top - nameListRect.top) - nameElRect.height / 2;
+                            nameList.style.transform = `translateY(${offsetY}px)`;
+                        }
+                    });
+                }, 500);
+            }
+        }
+
+        function displayWinners(winners) {
+            winnersContainer.innerHTML = '';
+            
+            winners.forEach((winner, index) => {
+                const winnerCard = document.createElement('div');
+                winnerCard.classList.add('winner-card');
+                
+                // عرض مختلف حسب نوع القرعة
+                if (currentLotteryType === 'images') {
+                    // إظهار صورة الفائز بشكل كامل على الواجهة بدون إطار
+                    winnerCard.innerHTML = `
+                        <div class="winner-image-container">
+                            <img src="${winner}" alt="الفائز ${index + 1}" onclick="showFullscreenWinner('${winner}')">
+                        </div>
+                        <p>الفائز ${index + 1}</p>
+                    `;
+                } else {
+                    winnerCard.innerHTML = `
+                        <div class="winner-name-container">
+                            <span>${winner}</span>
+                        </div>
+                        <p>الفائز ${index + 1}</p>
+                    `;
+                }
+                
+                winnersContainer.appendChild(winnerCard);
+            });
+            
+            // عرض الفائز الأول بطريقة منبثقة بعد لحظات
+            if (winners.length > 0 && currentLotteryType === 'images') {
+                setTimeout(() => {
+                    showFullscreenWinner(winners[0]);
+                }, 300);
+            }
+        }
+        
+     // Replace the showFullscreenWinner function with this improved version
+function showFullscreenWinner(src) {
+    // Remove any existing fullscreen winner display
+    const existingFullscreen = document.getElementById('fullscreen-winner');
+    if (existingFullscreen) {
+        document.body.removeChild(existingFullscreen);
+    }
+    
+    // Create fullscreen winner display with improved responsive design
+    const fullscreenWinner = document.createElement('div');
+    fullscreenWinner.id = 'fullscreen-winner';
+    fullscreenWinner.className = 'fullscreen-winner';
+    
+    fullscreenWinner.innerHTML = `
+        <div class="fullscreen-winner-content">
+            <img src="${src}" alt="الفائز" style="max-width: 100%; max-height: 80vh; object-fit: contain;">
+            <div class="fullscreen-winner-overlay">
+                <h2>تهانينا للفائز!</h2>
+                <button class="close-fullscreen">إغلاق</button>
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(fullscreenWinner);
+    
+    // Add confetti effect around the image
+    createConfettiAround(fullscreenWinner);
+    
+    // Close display when close button is clicked or when clicking outside the image
+    const closeBtn = fullscreenWinner.querySelector('.close-fullscreen');
+    closeBtn.addEventListener('click', () => {
+        fullscreenWinner.classList.add('fade-out');
+        setTimeout(() => {
+            if (document.body.contains(fullscreenWinner)) {
+                document.body.removeChild(fullscreenWinner);
+            }
+        }, 500);
+    });
+    
+    fullscreenWinner.addEventListener('click', (e) => {
+        if (e.target === fullscreenWinner) {
+            fullscreenWinner.classList.add('fade-out');
+            setTimeout(() => {
+                if (document.body.contains(fullscreenWinner)) {
+                    document.body.removeChild(fullscreenWinner);
+                }
+            }, 500);
+        }
+    });
+}
+
+// Add these CSS styles to your <style> section to improve the fullscreen winner display
+/*
+.fullscreen-winner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.85);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: fadeIn 0.5s ease;
+    backdrop-filter: blur(10px);
+}
+
+.fullscreen-winner.fade-out {
+    animation: fadeOut 0.5s ease forwards;
+}
+
+.fullscreen-winner-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 1rem;
+}
+
+.fullscreen-winner-content img {
+    max-width: 100%;
+    max-height: 80vh;
+    object-fit: contain;
+    border-radius: 1rem;
+    animation: zoomIn 1s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 0 50px rgba(255, 255, 255, 0.3);
+}
+
+.fullscreen-winner-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    padding: 2rem;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+    color: white;
+    text-align: center;
+    animation: slideUp 0.8s ease;
+}
+
+.fullscreen-winner-overlay h2 {
+    font-size: clamp(2rem, 6vw, 3rem);
+    margin-bottom: 1rem;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    color: white;
+}
+
+.close-fullscreen {
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: 9999px;
+    font-size: 1.25rem;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+    margin-top: 1rem;
+}
+
+.close-fullscreen:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+}
+
+@media (max-width: 768px) {
+    .fullscreen-winner-content img {
+        max-height: 60vh;
+    }
+    
+    .fullscreen-winner-overlay {
+        padding: 1.5rem;
+    }
+    
+    .close-fullscreen {
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+    }
+}
+*/
+        
+        // دالة لإنشاء كونفيتي حول عنصر محدد
+        function createConfettiAround(element) {
+            const colors = [
+                '#ff5252', '#ffeb3b', '#2196f3', '#4caf50', '#e040fb', 
+                '#f06292', '#ffc107', '#03a9f4', '#8bc34a', '#9c27b0'
+            ];
+            
+            for (let i = 0; i < 100; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'around-confetti';
+                
+                // تخصيص حجم وشكل ولون الكونفيتي بشكل عشوائي
+                const size = Math.random() * 10 + 5;
+                const shape = Math.random() > 0.5 ? '50%' : '0';
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                
+                confetti.style.width = `${size}px`;
+                confetti.style.height = `${size}px`;
+                confetti.style.borderRadius = shape;
+                confetti.style.backgroundColor = color;
+                
+                // توزيع الكونفيتي حول العنصر بشكل عشوائي
+                const angle = Math.random() * Math.PI * 2; // زاوية عشوائية
+                const distance = 300 + Math.random() * 100; // مسافة عشوائية من المركز
+                
+                // حساب المواقع بناءً على الزاوية والمسافة
+                const x = Math.cos(angle) * distance;
+                const y = Math.sin(angle) * distance;
+                
+                confetti.style.left = `calc(50% + ${x}px)`;
+                confetti.style.top = `calc(50% + ${y}px)`;
+                
+                // إضافة الكونفيتي إلى العنصر
+                element.appendChild(confetti);
+                
+                // تحريك الكونفيتي
+                const animationDuration = Math.random() * 2 + 2;
+                const finalX = x + (Math.random() - 0.5) * 100;
+                const finalY = y + (Math.random() - 0.5) * 100;
+                
+                confetti.animate(
+                    [
+                        { transform: `translate(0, 0) rotate(0deg)`, opacity: 0 },
+                        { transform: `translate(${finalX * 0.3}px, ${finalY * 0.3}px) rotate(180deg)`, opacity: 1 },
+                        { transform: `translate(${finalX}px, ${finalY}px) rotate(360deg)`, opacity: 0 }
+                    ],
+                    {
+                        duration: animationDuration * 1000,
+                        easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                        fill: 'forwards'
+                    }
+                );
+                
+                // إزالة الكونفيتي بعد انتهاء الرسوم المتحركة
+                setTimeout(() => {
+                    if (element.contains(confetti)) {
+                        element.removeChild(confetti);
+                    }
+                }, animationDuration * 1000);
+            }
+        }
+           position: relative;
+        
+       
+
+        function createConfetti() {
+            // إزالة أي كونفيتي موجود
+            document.querySelectorAll('.confetti').forEach(el => el.remove());
+            
+            // إنشاء كونفيتي جديد
+            const colors = [
+                '#ff5252', '#ffeb3b', '#2196f3', '#4caf50', '#e040fb', 
+                '#f06292', '#ffc107', '#03a9f4', '#8bc34a', '#9c27b0'
+            ];
+            
+            for (let i = 0; i < 150; i++) {
+                const confetti = document.createElement('div');
+                confetti.classList.add('confetti');
+                
+                // تخصيص حجم وشكل ولون الكونفيتي بشكل عشوائي
+                const size = Math.random() * 10 + 5;
+                const shape = Math.random() > 0.5 ? '50%' : '0';
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                
+                confetti.style.width = `${size}px`;
+                confetti.style.height = `${size}px`;
+                confetti.style.borderRadius = shape;
+                confetti.style.backgroundColor = color;
+                confetti.style.left = `${Math.random() * 100}vw`;
+                confetti.style.animationDuration = `${Math.random() * 3 + 2}s`;
+                confetti.style.animationDelay = `${Math.random() * 2}s`;
+                
+                document.body.appendChild(confetti);
+
+                // إزالة الكونفيتي بعد انتهاء التحريك
+                setTimeout(() => {
+                    if (document.body.contains(confetti)) {
+                        confetti.remove();
+                    }
+                }, 5000);
+            }
+        }
+
+        function playWinnerSound() {
+            try {
+                // صوت الفوز (جرس)
+                const winnerSound = new Audio('https://www.soundjay.com/misc/sounds/bell-ringing-05.mp3');
+                winnerSound.volume = 0.7;
+                winnerSound.play();
+                
+                // صوت التصفيق بعد لحظة قصيرة
+                setTimeout(() => {
+                    const applauseSound = new Audio('https://www.soundjay.com/human/sounds/applause-01.mp3');
+                    applauseSound.volume = 0.5;
+                    applauseSound.play();
+                }, 500);
+            } catch (error) {
+                console.error('خطأ في تشغيل الصوت:', error);
+            }
+        }
+
+        // ميزة السحب والإفلات للصور
+        const dropZone = document.querySelector('.container');
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            if (currentLotteryType === 'images') {
+                dropZone.classList.add('drag-over');
+            }
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            
+            if (currentLotteryType === 'images') {
+                const files = e.dataTransfer.files;
+                handleImageUpload({ target: { files } });
+            }
+        });
+
+        // إضافة تأثيرات نقر للأزرار
+        document.querySelectorAll('.btn, .switch-btn, .remove-btn, .remove-name').forEach(button => {
+            button.addEventListener('mousedown', () => {
+                if (!button.disabled) {
+                    button.style.transform = 'scale(0.95)';
+                }
+            });
+            
+            button.addEventListener('mouseup', () => {
+                if (!button.disabled) {
+                    button.style.transform = '';
+                }
+            });
+            
+            button.addEventListener('mouseleave', () => {
+                if (!button.disabled) {
+                    button.style.transform = '';
+                }
+            });
+        });
+
+        // عرض فيديو تعليمي
+        function showTutorialVideo() {
+            videoModal.style.display = 'flex';
+        }
+
+        // دوال إضافية للتفاعل
+        window.showLargeWinnerImage = showLargeWinnerImage;
+        window.showTutorialVideo = showTutorialVideo;
+
+        // التحقق من الإدخال الأولي
+        validateInputs();
+    </script>
+</body>
+</html>
