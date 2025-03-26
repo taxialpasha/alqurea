@@ -1,6 +1,6 @@
 const CACHE_NAME = "lottery-app-cache-v1";
 const ASSETS_TO_CACHE = [
-  "./القرعه اخر تحديث.html",
+  "./index.html",
   "./manifest.json",
   "./icon-192x192.png",
   "./icon-512x512.png",
