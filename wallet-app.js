@@ -891,35 +891,83 @@ function linkInvestorToUser(userId, investorId) {
  * جلب بيانات المستثمر
  * @returns {Promise<Object>} بيانات المستثمر
  */
+// التحديث المطلوب لربط التطبيق بقاعدة بيانات Firebase الحقيقية لجلب بيانات المستثمر الفعلية
+
+/**
+ * الخطوة 1: تعديل دالة fetchInvestorData
+ * - استبدال البيانات الوهمية بجلب البيانات من Realtime Database بناءً على uid المستخدم.
+ */
 function fetchInvestorData() {
     return new Promise((resolve, reject) => {
         if (!currentUser) {
-            debugLog('لا يوجد مستخدم حالي');
+            console.error('لا يوجد مستخدم حالي');
             reject(new Error('المستخدم غير مسجل الدخول'));
             return;
         }
-        
-        // تغيير حالة المزامنة
-        syncStatus.isSyncing = true;
-        
-        debugLog('جاري جلب بيانات المستثمر...');
-        
-        // محاكاة جلب بيانات المستثمر
-        setTimeout(() => {
-            // في التطبيق الحقيقي: سيتم جلب البيانات من قاعدة البيانات
-            const mockInvestorData = generateMockInvestorData();
-            
-            investorData = mockInvestorData;
-            transactions = generateMockTransactions(mockInvestorData);
-            notifications = generateMockNotifications();
-            
-            // تحديث وقت المزامنة الأخير
-            syncStatus.lastSync = new Date();
-            syncStatus.isSyncing = false;
-            
-            debugLog('تم جلب بيانات المستثمر بنجاح');
-            resolve(investorData);
-        }, 1500);
+
+        // عرض التحميل
+        showLoaderOverlay('جاري تحميل بيانات المستثمر...');
+
+        const userId = currentUser.uid;
+        const dbRef = firebase.database().ref(`users/${userId}/investorData`);
+
+        dbRef.once('value')
+            .then(snapshot => {
+                const data = snapshot.val();
+                if (!data) {
+                    throw new Error('لم يتم العثور على بيانات المستثمر');
+                }
+
+                investorData = data;
+
+                // تحميل صورة المستخدم إن وجدت
+                if (investorData.photoURL) {
+                    document.getElementById('user-avatar').src = investorData.photoURL;
+                    document.getElementById('sidebar-avatar').src = investorData.photoURL;
+                }
+
+                // عرض اسم وبريد المستخدم
+                document.getElementById('user-name').textContent = investorData.name || 'اسم غير معروف';
+                document.getElementById('user-email').textContent = investorData.email || currentUser.email;
+                document.getElementById('investor-name').textContent = investorData.name || 'اسم المستثمر';
+
+                hideLoaderOverlay();
+                resolve(investorData);
+            })
+            .catch(error => {
+                console.error('فشل في تحميل بيانات المستثمر:', error);
+                hideLoaderOverlay();
+                showToast('خطأ', 'فشل في تحميل بيانات المستثمر', 'error');
+                reject(error);
+            });
+    });
+}
+
+/**
+ * الخطوة 2: عند إنشاء حساب، خزّن بيانات المستثمر تحت users/{uid}/investorData
+ */
+function linkInvestorToUser(userId, investorId) {
+    return new Promise((resolve, reject) => {
+        const ref = firebase.database().ref(`users/${userId}/investorData`);
+        const email = currentUser.email;
+
+        const investor = {
+            id: investorId,
+            name: 'مستثمر جديد',
+            email: email,
+            phone: '',
+            address: '',
+            cardNumber: '',
+            amount: 0,
+            interestRate: 17.5,
+            joinDate: new Date().toISOString(),
+            status: 'active',
+            photoURL: ''
+        };
+
+        ref.set(investor)
+            .then(() => resolve())
+            .catch(reject);
     });
 }
 
