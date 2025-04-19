@@ -891,6 +891,7 @@ function linkInvestorToUser(userId, investorId) {
  * جلب بيانات المستثمر
  * @returns {Promise<Object>} بيانات المستثمر
  */
+// تحديث دالة fetchInvestorData لتجلب بيانات المستثمر من investors/data وتطابق البريد الإلكتروني
 function fetchInvestorData() {
     return new Promise((resolve, reject) => {
         if (!currentUser) {
@@ -911,15 +912,13 @@ function fetchInvestorData() {
                     throw new Error('لم يتم العثور على بيانات المستثمرين');
                 }
 
-                // البحث عن المستثمر الذي يطابق البريد الإلكتروني
                 const foundInvestor = investorsArray.find(inv => inv.email === currentUser.email);
                 if (!foundInvestor) {
-                    throw new Error('لم يتم العثور على المستثمر المطابق للبريد');
+                    throw new Error('لا يوجد مستثمر مرتبط بهذا البريد');
                 }
 
                 investorData = foundInvestor;
 
-                // عرض البيانات
                 document.getElementById('user-name').textContent = investorData.name || 'اسم غير معروف';
                 document.getElementById('user-email').textContent = investorData.email || currentUser.email;
                 document.getElementById('investor-name').textContent = investorData.name || 'اسم المستثمر';
@@ -941,6 +940,36 @@ function fetchInvestorData() {
     });
 }
 
+// تحديث دالة ربط المستثمر لإضافته داخل investors/data كمصفوفة
+function linkInvestorToUser(userId, investorId) {
+    return new Promise((resolve, reject) => {
+        const ref = firebase.database().ref(`users/${userId}/investors/data`);
+        const email = currentUser.email;
+
+        const investor = {
+            id: investorId,
+            name: 'مستثمر جديد',
+            email: email,
+            phone: '',
+            address: '',
+            cardNumber: '',
+            amount: 0,
+            interestRate: 17.5,
+            joinDate: new Date().toISOString(),
+            status: 'نشط',
+            photoURL: ''
+        };
+
+        ref.once('value')
+            .then(snapshot => {
+                const currentData = snapshot.val() || [];
+                currentData.push(investor);
+                return ref.set(currentData);
+            })
+            .then(() => resolve())
+            .catch(reject);
+    });
+}
 /**
  * إنشاء بيانات مستثمر وهمية للاختبار
  * @returns {Object} بيانات المستثمر الوهمية
