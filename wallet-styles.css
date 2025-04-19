@@ -3,7 +3,7 @@
  * نظام الاستثمار المتكامل - تطبيق محفظتي
  */
 
- :root {
+:root {
     /* الألوان الرئيسية */
     --primary-color: #3b82f6;
     --primary-dark: #2563eb;
@@ -80,7 +80,11 @@ html, body {
     text-align: right;
     min-height: 100vh;
     overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
+
 
 /* ----- عناصر النص ----- */
 h1, h2, h3, h4, h5, h6 {
@@ -133,6 +137,7 @@ a:hover {
     width: 120px;
     height: auto;
     margin-bottom: var(--spacing-md);
+    animation: pulse 1.5s ease infinite alternate;
 }
 
 .spinner {
@@ -150,6 +155,11 @@ a:hover {
     100% { transform: rotate(360deg); }
 }
 
+@keyframes pulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.05); }
+}
+
 /* ----- شاشة تسجيل الدخول وإنشاء الحساب ----- */
 .auth-screen {
     min-height: 100vh;
@@ -158,6 +168,21 @@ a:hover {
     align-items: center;
     background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
     padding: var(--spacing-md);
+    position: relative;
+    overflow: hidden;
+}
+
+.auth-screen::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url('assets/pattern.svg');
+    background-size: cover;
+    opacity: 0.05;
+    z-index: 1;
 }
 
 .auth-container {
@@ -167,6 +192,8 @@ a:hover {
     width: 100%;
     max-width: 500px;
     overflow: hidden;
+    position: relative;
+    z-index: 2;
 }
 
 .auth-logo {
@@ -267,6 +294,12 @@ a:hover {
     outline: none;
     background: transparent;
     font-family: 'Tajawal', sans-serif;
+    width: 100%;
+}
+
+.input-group textarea {
+    min-height: 100px;
+    resize: vertical;
 }
 
 .currency-suffix {
@@ -312,11 +345,40 @@ a:hover {
     font-size: 1rem;
     text-align: center;
     border: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-primary, .btn-secondary, .btn-danger {
+    color: white;
+}
+
+.btn-primary::after,
+.btn-secondary::after,
+.btn-danger::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    opacity: 0;
+    transform: translate(-50%, -50%);
+    transition: width 0.3s ease, height 0.3s ease, opacity 0.3s ease;
+}
+
+.btn-primary:active::after,
+.btn-secondary:active::after,
+.btn-danger:active::after {
+    width: 300px;
+    height: 300px;
+    opacity: 1;
 }
 
 .btn-primary {
     background-color: var(--primary-color);
-    color: white;
 }
 
 .btn-primary:hover {
@@ -336,7 +398,6 @@ a:hover {
 
 .btn-secondary {
     background-color: var(--secondary-color);
-    color: white;
 }
 
 .btn-secondary:hover {
@@ -345,7 +406,6 @@ a:hover {
 
 .btn-danger {
     background-color: var(--error-color);
-    color: white;
 }
 
 .btn-danger:hover {
@@ -420,6 +480,13 @@ a:hover {
     align-items: center;
     justify-content: center;
     padding: var(--spacing-sm);
+    border-radius: 50%;
+    transition: background-color var(--transition-fast) ease;
+}
+
+#menu-toggle:hover {
+    background-color: var(--bg-gray-100);
+    color: var(--text-primary);
 }
 
 #notifications-btn {
@@ -433,6 +500,13 @@ a:hover {
     align-items: center;
     justify-content: center;
     padding: var(--spacing-sm);
+    border-radius: 50%;
+    transition: background-color var(--transition-fast) ease;
+}
+
+#notifications-btn:hover {
+    background-color: var(--bg-gray-100);
+    color: var(--text-primary);
 }
 
 .badge {
@@ -442,13 +516,14 @@ a:hover {
     background-color: var(--error-color);
     color: white;
     font-size: 0.625rem;
-    width: 16px;
-    height: 16px;
+    width: 18px;
+    height: 18px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     font-weight: 600;
+    box-shadow: 0 0 0 2px var(--bg-light);
 }
 
 .user-avatar {
@@ -457,6 +532,12 @@ a:hover {
     border-radius: 50%;
     overflow: hidden;
     cursor: pointer;
+    border: 2px solid var(--bg-gray-100);
+    transition: border-color var(--transition-fast) ease;
+}
+
+.user-avatar:hover {
+    border-color: var(--primary-light);
 }
 
 .user-avatar.large {
@@ -482,6 +563,8 @@ a:hover {
     z-index: 200;
     transform: translateX(100%);
     transition: transform var(--transition-normal) ease;
+    display: flex;
+    flex-direction: column;
 }
 
 .sidebar.active {
@@ -493,6 +576,7 @@ a:hover {
     flex-direction: column;
     height: 100%;
     padding-top: var(--spacing-xl);
+    overflow-y: auto;
 }
 
 .user-info {
@@ -591,8 +675,37 @@ a:hover {
     padding-bottom: var(--spacing-2xl);
 }
 
-.sidebar.active + .main-content {
-    margin-right: 280px;
+@media (min-width: 1024px) {
+    .sidebar {
+        transform: translateX(0);
+        box-shadow: none;
+        border-left: 1px solid var(--bg-gray-200);
+    }
+
+    .main-content {
+        margin-right: 280px;
+    }
+
+    #menu-toggle {
+        display: none;
+    }
+}
+
+@media (max-width: 1023px) {
+    .sidebar.active + .main-content {
+        position: relative;
+    }
+
+    .sidebar.active + .main-content::after {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 199;
+    }
 }
 
 .page {
@@ -603,6 +716,12 @@ a:hover {
 
 .page.active {
     display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
 }
 
 .page-header {
@@ -636,6 +755,12 @@ a:hover {
     color: white;
     box-shadow: var(--shadow-xl);
     overflow: hidden;
+    transform-style: preserve-3d;
+    transition: transform var(--transition-normal) ease;
+}
+
+.investment-card:hover {
+    transform: translateY(-5px) rotateY(5deg);
 }
 
 .card-bg {
@@ -730,7 +855,7 @@ a:hover {
 /* ----- الإجراءات السريعة ----- */
 .quick-actions {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-xl);
 }
@@ -747,15 +872,27 @@ a:hover {
     cursor: pointer;
     transition: all var(--transition-normal) ease;
     box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
 }
 
 .action-button i {
     font-size: 1.5rem;
     margin-bottom: var(--spacing-sm);
+    transition: transform var(--transition-normal) ease;
 }
 
 .action-button span {
     font-weight: 600;
+    transition: transform var(--transition-normal) ease;
+}
+
+.action-button:hover i {
+    transform: translateY(-5px);
+}
+
+.action-button:hover span {
+    transform: translateY(2px);
 }
 
 .action-button.withdraw {
@@ -793,7 +930,7 @@ a:hover {
 /* ----- ملخص لوحة التحكم ----- */
 .dashboard-summary {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
     gap: var(--spacing-md);
     margin-bottom: var(--spacing-xl);
 }
@@ -805,6 +942,12 @@ a:hover {
     display: flex;
     align-items: center;
     box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-normal) ease, box-shadow var(--transition-normal) ease;
+}
+
+.summary-item:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
 }
 
 .summary-icon {
@@ -855,11 +998,23 @@ a:hover {
     margin-bottom: var(--spacing-xl);
 }
 
+@media (max-width: 767px) {
+    .dashboard-charts {
+        grid-template-columns: 1fr;
+    }
+}
+
 .chart-container {
     background-color: var(--bg-light);
     border-radius: var(--radius-lg);
     padding: var(--spacing-lg);
     box-shadow: var(--shadow-sm);
+    transition: transform var(--transition-normal) ease, box-shadow var(--transition-normal) ease;
+}
+
+.chart-container:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
 }
 
 .chart-header {
@@ -896,6 +1051,7 @@ a:hover {
 
 .chart-body {
     height: 250px;
+    position: relative;
 }
 
 /* ----- آخر المعاملات ----- */
@@ -1001,6 +1157,83 @@ a:hover {
     color: var(--error-color);
 }
 
+/* ----- States ----- */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-xl);
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.empty-state i {
+    font-size: 3rem;
+    margin-bottom: var(--spacing-md);
+    opacity: 0.5;
+}
+
+.empty-state p {
+    margin-bottom: 0;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ----- Media Queries ----- */
+@media (max-width: 480px) {
+    .dashboard-summary,
+    .quick-actions {
+        grid-template-columns: 1fr;
+    }
+    
+    .investment-card {
+        height: auto;
+        padding: var(--spacing-md);
+    }
+    
+    .card-profits {
+        flex-direction: column;
+        gap: var(--spacing-md);
+    }
+    
+    .form-row {
+        flex-direction: column;
+    }
+    
+    .auth-container {
+        max-width: 90%;
+    }
+}
+
+@media (max-width: 768px) {
+    .transactions-filters {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-group {
+        overflow-x: auto;
+        white-space: nowrap;
+        padding-bottom: var(--spacing-xs);
+    }
+    
+    .notifications-panel {
+        width: 100%;
+        left: -100%;
+    }
+    
+    .notifications-panel.active {
+        transform: translateX(100%);
+    }
+    
+    .modal {
+        max-width: 90%;
+    }
+}
+
 /* ----- صفحة المعاملات ----- */
 .transactions-filters {
     display: flex;
@@ -1014,6 +1247,23 @@ a:hover {
 .filter-group {
     display: flex;
     gap: var(--spacing-xs);
+    overflow-x: auto;
+    padding-bottom: var(--spacing-xs);
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-gray-200) transparent;
+}
+
+.filter-group::-webkit-scrollbar {
+    height: 4px;
+}
+
+.filter-group::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.filter-group::-webkit-scrollbar-thumb {
+    background-color: var(--bg-gray-200);
+    border-radius: var(--radius-pill);
 }
 
 .filter-btn {
@@ -1024,6 +1274,7 @@ a:hover {
     cursor: pointer;
     font-weight: 500;
     transition: all var(--transition-fast) ease;
+    white-space: nowrap;
 }
 
 .filter-btn.active {
@@ -1061,6 +1312,25 @@ a:hover {
     color: var(--text-muted);
 }
 
+.table-responsive {
+    overflow-x: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--bg-gray-200) transparent;
+}
+
+.table-responsive::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background-color: var(--bg-gray-200);
+    border-radius: var(--radius-pill);
+}
+
 .transactions-table-container {
     background-color: var(--bg-light);
     border-radius: var(--radius-lg);
@@ -1084,10 +1354,17 @@ a:hover {
     background-color: var(--bg-gray-50);
     font-weight: 600;
     color: var(--text-secondary);
+    position: sticky;
+    top: 0;
 }
 
 .transactions-table tr {
     border-bottom: 1px solid var(--bg-gray-100);
+    transition: background-color var(--transition-fast) ease;
+}
+
+.transactions-table tr:hover {
+    background-color: var(--bg-gray-50);
 }
 
 .transactions-table tr:last-child {
@@ -1117,12 +1394,28 @@ a:hover {
     color: var(--error-color);
 }
 
+.status.active {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: var(--success-color);
+}
+
+.status.current {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: var(--primary-color);
+}
+
 .detail-btn {
     background: none;
     border: none;
     color: var(--primary-color);
     cursor: pointer;
     padding: var(--spacing-xs);
+    border-radius: var(--radius-md);
+    transition: background-color var(--transition-fast) ease;
+}
+
+.detail-btn:hover {
+    background-color: var(--bg-gray-100);
 }
 
 .pagination {
@@ -1130,6 +1423,7 @@ a:hover {
     justify-content: center;
     align-items: center;
     gap: var(--spacing-xs);
+    margin-top: var(--spacing-lg);
 }
 
 .pagination-btn {
@@ -1191,6 +1485,12 @@ a:hover {
     box-shadow: var(--shadow-sm);
     position: relative;
     overflow: hidden;
+    transition: transform var(--transition-normal) ease, box-shadow var(--transition-normal) ease;
+}
+
+.profit-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-md);
 }
 
 .profit-card::before {
@@ -1289,10 +1589,17 @@ a:hover {
     background-color: var(--bg-gray-50);
     font-weight: 600;
     color: var(--text-secondary);
+    position: sticky;
+    top: 0;
 }
 
 .payments-table tr {
     border-bottom: 1px solid var(--bg-gray-100);
+    transition: background-color var(--transition-fast) ease;
+}
+
+.payments-table tr:hover {
+    background-color: var(--bg-gray-50);
 }
 
 .payments-table tr:last-child {
@@ -1305,6 +1612,12 @@ a:hover {
     grid-template-columns: 1fr 2fr;
     gap: var(--spacing-xl);
     margin-bottom: var(--spacing-xl);
+}
+
+@media (max-width: 1024px) {
+    .withdraw-container {
+        grid-template-columns: 1fr;
+    }
 }
 
 .balance-card {
@@ -1340,7 +1653,7 @@ a:hover {
 
 .balance-warning {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
     background-color: rgba(239, 68, 68, 0.1);
@@ -1352,6 +1665,7 @@ a:hover {
 .balance-warning i {
     margin-left: var(--spacing-md);
     font-size: 1.25rem;
+    flex-shrink: 0;
 }
 
 .withdraw-form-container {
@@ -1384,10 +1698,6 @@ a:hover {
     gap: var(--spacing-md);
 }
 
-.hidden {
-    display: none;
-}
-
 .withdrawals-table-container {
     background-color: var(--bg-light);
     border-radius: var(--radius-lg);
@@ -1411,10 +1721,17 @@ a:hover {
     background-color: var(--bg-gray-50);
     font-weight: 600;
     color: var(--text-secondary);
+    position: sticky;
+    top: 0;
 }
 
 .withdrawals-table tr {
     border-bottom: 1px solid var(--bg-gray-100);
+    transition: background-color var(--transition-fast) ease;
+}
+
+.withdrawals-table tr:hover {
+    background-color: var(--bg-gray-50);
 }
 
 .withdrawals-table tr:last-child {
@@ -1426,6 +1743,12 @@ a:hover {
     display: grid;
     grid-template-columns: 300px 1fr;
     gap: var(--spacing-xl);
+}
+
+@media (max-width: 1024px) {
+    .profile-container {
+        grid-template-columns: 1fr;
+    }
 }
 
 .profile-sidebar {
@@ -1447,6 +1770,7 @@ a:hover {
     border-radius: 50%;
     overflow: hidden;
     margin: 0 auto var(--spacing-md);
+    border: 3px solid var(--primary-light);
 }
 
 .profile-image img {
@@ -1487,16 +1811,6 @@ a:hover {
     margin-bottom: var(--spacing-xs);
 }
 
-.status.active {
-    display: inline-block;
-    padding: var(--spacing-xs) var(--spacing-md);
-    background-color: rgba(16, 185, 129, 0.1);
-    color: var(--success-color);
-    border-radius: var(--radius-pill);
-    font-size: 0.75rem;
-    font-weight: 600;
-}
-
 .profile-content {
     background-color: var(--bg-light);
     border-radius: var(--radius-lg);
@@ -1508,6 +1822,12 @@ a:hover {
     display: flex;
     background-color: var(--bg-gray-50);
     border-bottom: 1px solid var(--bg-gray-200);
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+.profile-tabs::-webkit-scrollbar {
+    display: none;
 }
 
 .profile-tab {
@@ -1518,6 +1838,7 @@ a:hover {
     color: var(--text-secondary);
     cursor: pointer;
     transition: all var(--transition-fast) ease;
+    white-space: nowrap;
 }
 
 .profile-tab.active {
@@ -1532,6 +1853,7 @@ a:hover {
 
 .profile-tab-content.active {
     display: block;
+    animation: fadeIn 0.3s ease;
 }
 
 .toggle-password {
@@ -1977,16 +2299,6 @@ a:hover {
     font-weight: 600;
 }
 
-.detail-value.status {
-    display: inline-block;
-    padding: var(--spacing-xs) var(--spacing-md);
-    background-color: rgba(245, 158, 11, 0.1);
-    color: var(--warning-color);
-    border-radius: var(--radius-pill);
-    font-size: 0.75rem;
-    font-weight: 600;
-}
-
 .note-message {
     display: flex;
     align-items: flex-start;
@@ -2006,6 +2318,66 @@ a:hover {
 .note-message p {
     font-size: 0.875rem;
     margin-bottom: 0;
+}
+
+/* ----- Session Style ----- */
+.session-item {
+    display: flex;
+    align-items: center;
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--bg-gray-100);
+}
+
+.session-item:last-child {
+    border-bottom: none;
+}
+
+.session-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border-radius: var(--radius-md);
+    margin-left: var(--spacing-md);
+    font-size: 1.25rem;
+    color: white;
+    background-color: var(--primary-color);
+}
+
+.session-details {
+    flex: 1;
+}
+
+.session-details h4 {
+    margin-bottom: var(--spacing-xs);
+}
+
+.session-details p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    margin-bottom: var(--spacing-xs);
+}
+
+.session-time {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.logout-session {
+    padding: var(--spacing-xs) var(--spacing-md);
+    background-color: rgba(239, 68, 68, 0.1);
+    color: var(--error-color);
+    border: none;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    font-weight: 500;
+    transition: all var(--transition-fast) ease;
+}
+
+.logout-session:hover {
+    background-color: var(--error-color);
+    color: white;
 }
 
 /* ----- الإشعارات المؤقتة ----- */
@@ -2131,23 +2503,50 @@ a:hover {
     --bg-gray-200: #6b7280;
 }
 
-/* ----- استجابة للشاشات الصغيرة ----- */
+.dark-mode .auth-screen {
+    background: linear-gradient(135deg, #1e3a8a 0%, #5b21b6 100%);
+}
+
+.dark-mode .sidebar {
+    border-left-color: var(--bg-gray-100);
+}
+
+.dark-mode .status.completed {
+    background-color: rgba(16, 185, 129, 0.2);
+}
+
+.dark-mode .status.pending {
+    background-color: rgba(245, 158, 11, 0.2);
+}
+
+.dark-mode .status.canceled {
+    background-color: rgba(239, 68, 68, 0.2);
+}
+
+.dark-mode .status.active {
+    background-color: rgba(16, 185, 129, 0.2);
+}
+
+.dark-mode .note-message {
+    background-color: rgba(59, 130, 246, 0.2);
+}
+
+.dark-mode .logout-session {
+    background-color: rgba(239, 68, 68, 0.2);
+}
+
+.dark-mode .balance-warning {
+    background-color: rgba(239, 68, 68, 0.2);
+}
+
+/* ----- استجابة للشاشات المختلفة ----- */
 @media (max-width: 1024px) {
     .main-content {
         padding: var(--spacing-md);
     }
     
-    .sidebar.active + .main-content {
-        margin-right: 0;
-    }
-    
     .dashboard-charts,
     .profit-summary {
-        grid-template-columns: 1fr;
-    }
-    
-    .withdraw-container,
-    .profile-container {
         grid-template-columns: 1fr;
     }
 }
@@ -2156,17 +2555,6 @@ a:hover {
     .dashboard-summary,
     .quick-actions {
         grid-template-columns: repeat(2, 1fr);
-    }
-    
-    .transactions-filters {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    
-    .filter-group {
-        overflow-x: auto;
-        white-space: nowrap;
-        padding-bottom: var(--spacing-xs);
     }
     
     .notifications-panel {
@@ -2181,6 +2569,14 @@ a:hover {
     .modal {
         max-width: 90%;
     }
+    
+    .withdraw-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .profile-container {
+        grid-template-columns: 1fr;
+    }
 }
 
 @media (max-width: 480px) {
@@ -2191,6 +2587,7 @@ a:hover {
     
     .investment-card {
         height: auto;
+        padding-bottom: var(--spacing-xl);
     }
     
     .card-profits {
@@ -2203,6 +2600,30 @@ a:hover {
     }
     
     .auth-container {
-        max-width: 90%;
+        max-width: 95%;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions button {
+        width: 100%;
+    }
+    
+    .settings-actions {
+        flex-direction: column;
+    }
+    
+    .settings-actions button {
+        width: 100%;
+    }
+    
+    .modal-footer {
+        flex-direction: column;
+    }
+    
+    .modal-footer button {
+        width: 100%;
     }
 }
