@@ -1,17 +1,20 @@
 const CACHE_NAME = 'investor-portfolio-v1';
 const OFFLINE_URL = '/offline.html';
 const ASSETS = [
-    '/',
-    '/index.html',
-    '/styles.css',
-    '/app.js',
-    '/manifest.json',
-    '/offline.html',
+    './',
+    './index.html',
+    './styles.css',
+    './app.js',
+    './manifest.json',
+    './offline.html',
     'https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802',
     'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
     'https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap',
     'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js'
 ];
+
+// وأيضًا تغيير OFFLINE_URL
+const OFFLINE_URL = './offline.html';
 
 // تثبيت Service Worker
 self.addEventListener('install', (event) => {
