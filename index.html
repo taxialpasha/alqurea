@@ -3,25 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="تطبيق محفظة المستثمر لإدارة استثماراتك بكل سهولة">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#6366f1">
-    
-    <!-- أيقونات Apple -->
-    <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802">
-    <link rel="apple-touch-icon" sizes="152x152" href="https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802">
-    <link rel="apple-touch-icon" sizes="180x180" href="https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802">
-    <link rel="apple-touch-icon" sizes="167x167" href="https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802">
-    
-    <!-- أيقونة الموقع الأساسية -->
-    <link rel="icon" type="image/png" sizes="32x32" href="https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802">
-    <link rel="icon" type="image/png" sizes="16x16" href="https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802">
-    
-    <!-- ملف Manifest -->
     <link rel="manifest" href="manifest.json">
-    
     <title>محفظة المستثمر</title>
     
     <!-- Font Awesome -->
@@ -29,10 +15,17 @@
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
     
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    
     <!-- CSS -->
     <link rel="stylesheet" href="styles.css">
 </head>
-<!-- باقي محتوى HTML يبقى كما هو -->
 <body>
     <!-- Main Auth Screen -->
     <div id="auth-screen" class="auth-container">
