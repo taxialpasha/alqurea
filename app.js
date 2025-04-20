@@ -22,6 +22,380 @@ let settings = {
     interestRate: 17.5,
     currency: 'دينار'
 };
+let charts = {};
+
+// Authentication Manager
+// تم دمج AuthManager مباشرة في ملف app.js
+const AuthManager = {
+    // تسجيل مستخدم جديد
+    async registerUser(name, email, password) {
+        try {
+            showSpinner();
+            
+            // إنشاء المستخدم في Firebase Authentication
+            const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+            
+            // إضافة اسم المستخدم في ملف التعريف
+            await user.updateProfile({
+                displayName: name
+            });
+            
+            // تخزين بيانات المستخدم في قاعدة البيانات
+            await firebase.database().ref(`appUsers/${user.uid}`).set({
+                name: name,
+                email: email,
+                createdAt: new Date().toISOString()
+            });
+            
+            currentUser = {
+                uid: user.uid,
+                email: user.email,
+                name: name
+            };
+            
+            hideSpinner();
+            return true;
+        } catch (error) {
+            hideSpinner();
+            console.error("Error registering user:", error);
+            
+            let errorMessage = 'حدث خطأ أثناء إنشاء الحساب';
+            
+            if (error.code === 'auth/email-already-in-use') {
+                errorMessage = 'البريد الإلكتروني مستخدم بالفعل';
+            } else if (error.code === 'auth/invalid-email') {
+                errorMessage = 'البريد الإلكتروني غير صالح';
+            } else if (error.code === 'auth/weak-password') {
+                errorMessage = 'كلمة المرور ضعيفة جداً';
+            }
+            
+            throw new Error(errorMessage);
+        }
+    },
+    
+    // تسجيل الدخول
+    async loginUser(email, password) {
+        try {
+            showSpinner();
+            
+            const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+            const user = userCredential.user;
+            
+            // جلب بيانات المستخدم من قاعدة البيانات (إن وجدت)
+            const userDataSnapshot = await firebase.database().ref(`appUsers/${user.uid}`).once('value');
+            const userData = userDataSnapshot.val() || {};
+            
+            currentUser = {
+                uid: user.uid,
+                email: user.email,
+                name: userData.name || user.displayName || 'مستخدم'
+            };
+            
+            // حفظ حالة تسجيل الدخول
+            localStorage.setItem('userEmail', email);
+            
+            hideSpinner();
+            return true;
+        } catch (error) {
+            hideSpinner();
+            console.error("Error logging in:", error);
+            
+            let errorMessage = 'حدث خطأ أثناء تسجيل الدخول';
+            
+            if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                errorMessage = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+            } else if (error.code === 'auth/invalid-email') {
+                errorMessage = 'البريد الإلكتروني غير صالح';
+            } else if (error.code === 'auth/too-many-requests') {
+                errorMessage = 'تم تقييد الحساب بسبب كثرة المحاولات الفاشلة. حاول مرة أخرى لاحقاً';
+            }
+            
+            throw new Error(errorMessage);
+        }
+    },
+                 
+    // تسجيل الخروج
+    async logout() {
+        try {
+            await firebase.auth().signOut();
+            currentUser = null;
+            currentInvestor = null;
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('investorData');
+            return true;
+        } catch (error) {
+            console.error("Error logging out:", error);
+            throw new Error('حدث خطأ أثناء تسجيل الخروج');
+        }
+    },
+    
+    // التحقق من حالة المصادقة
+    getCurrentUser() {
+        return firebase.auth().currentUser;
+    }
+};
+
+// Investor Data Manager
+const InvestorDataManager = {
+    currentInvestor: null,
+    dbRef: firebase.database(),
+    
+    async verifyInvestor(investorId, phoneNumber) {
+        try {
+            showSpinner();
+            
+            // تنظيف رقم الهاتف
+            const cleanPhone = phoneNumber.replace(/\s/g, '');
+            
+            // البحث عن بيانات المستثمر في جميع المستخدمين
+            const usersSnapshot = await this.dbRef.ref('users').once('value');
+            const users = usersSnapshot.val();
+            
+            let investorData = null;
+            let foundUserId = null;
+            let foundInvestorIndex = null;
+            let settings = {
+                interestRate: 17.5,
+                currency: 'دينار'
+            };
+            
+            // البحث في كل مستخدم في النظام
+            for (const userId in users) {
+                if (users[userId].investors && users[userId].investors.data) {
+                    // البحث في مصفوفة المستثمرين
+                    const investorsData = users[userId].investors.data;
+                    for (let i = 0; i < investorsData.length; i++) {
+                        const investor = investorsData[i];
+                        // البحث باستخدام رقم الهاتف والمعرف
+                        const investorCleanPhone = investor.phone ? investor.phone.replace(/\s/g, '') : '';
+                        
+                        if (investorCleanPhone === cleanPhone && investor.id === investorId) {
+                            investorData = investor;
+                            foundUserId = userId;
+                            foundInvestorIndex = i;
+                            
+                            // جلب الإعدادات من نفس المستخدم
+                            if (users[userId].settings && users[userId].settings.data) {
+                                settings = users[userId].settings.data;
+                            }
+                            break;
+                        }
+                    }
+                }
+                if (investorData) break;
+            }
+            
+            if (!investorData) {
+                throw new Error('لم يتم العثور على المستثمر بهذا المعرف أو رقم الهاتف');
+            }
+            
+            // جلب جميع العمليات المرتبطة بالمستثمر
+            let investorTransactions = [];
+            if (users[foundUserId].transactions && users[foundUserId].transactions.data) {
+                investorTransactions = users[foundUserId].transactions.data.filter(t => t.investorId === investorData.id);
+            }
+            
+            // تحويل البيانات للشكل المطلوب
+            this.currentInvestor = {
+                id: investorData.id,
+                name: investorData.name,
+                phone: investorData.phone,
+                joinDate: investorData.joinDate || investorData.createdAt,
+                balance: investorData.amount || 0,
+                profits: this.calculatePendingProfits(investorData),
+                interestRate: settings.interestRate,
+                dueDate: this.calculateDueDate(investorData),
+                address: investorData.address,
+                cardNumber: investorData.cardNumber,
+                email: currentUser.email // إضافة بريد المستخدم المسجل دخوله
+            };
+            
+            // تخزين بيانات المستثمر في التخزين المحلي
+            localStorage.setItem('investorData', JSON.stringify({
+                id: investorData.id,
+                phone: cleanPhone
+            }));
+            
+            // تخزين مسار البيانات للتحديثات في الوقت الحقيقي
+            this.userPath = `users/${foundUserId}`;
+            this.investorPath = `${this.userPath}/investors/data/${foundInvestorIndex}`;
+            
+            // تحويل العمليات للشكل المطلوب
+            window.transactions = investorTransactions.map(t => ({
+                id: t.id,
+                type: this.getTransactionType(t.type),
+                typeAr: t.type,
+                amount: t.amount,
+                date: t.date,
+                description: t.notes || '',
+                balanceAfter: t.balanceAfter
+            }));
+            
+            // تحديث الإعدادات العامة
+            window.settings = settings;
+            
+            // إعداد المستمعين للتحديثات في الوقت الحقيقي
+            this.setupRealtimeListeners(investorData.id);
+            
+            hideSpinner();
+            currentInvestor = this.currentInvestor;
+            return currentInvestor;
+        } catch (error) {
+            hideSpinner();
+            console.error("Error verifying investor:", error);
+            throw error;
+        }
+    },
+    
+    setupRealtimeListeners(investorId) {
+        // مستمع لتحديثات بيانات المستثمر
+        if (this.investorPath) {
+            this.dbRef.ref(this.investorPath).on('value', snapshot => {
+                const data = snapshot.val();
+                if (data) {
+                    this.currentInvestor = {
+                        ...this.currentInvestor,
+                        name: data.name,
+                        phone: data.phone,
+                        balance: data.amount || 0,
+                        profits: this.calculatePendingProfits(data),
+                        address: data.address,
+                        cardNumber: data.cardNumber
+                    };
+                    currentInvestor = this.currentInvestor;
+                    updateUI();
+                }
+            });
+        }
+        
+        // مستمع لتحديثات العمليات
+        if (this.userPath) {
+            this.dbRef.ref(`${this.userPath}/transactions/data`).on('value', snapshot => {
+                const allTransactions = snapshot.val() || [];
+                const investorTransactions = allTransactions.filter(t => t.investorId === investorId);
+                
+                window.transactions = investorTransactions.map(t => ({
+                    id: t.id,
+                    type: this.getTransactionType(t.type),
+                    typeAr: t.type,
+                    amount: t.amount,
+                    date: t.date,
+                    description: t.notes || '',
+                    balanceAfter: t.balanceAfter
+                }));
+                
+                renderRecentTransactions();
+                if (document.getElementById('transactions-page').classList.contains('active')) {
+                    renderAllTransactions();
+                }
+                if (document.getElementById('profits-page').classList.contains('active')) {
+                    renderProfitsDetails();
+                }
+                // تحديث الرسوم البيانية
+                updateCharts();
+            });
+        }
+        
+        // مستمع لتحديثات الإعدادات
+        if (this.userPath) {
+            this.dbRef.ref(`${this.userPath}/settings/data`).on('value', snapshot => {
+                const settingsData = snapshot.val();
+                if (settingsData) {
+                    window.settings = settingsData;
+                    // تحديث نسبة الفائدة في واجهة المستخدم
+                    this.currentInvestor.interestRate = settingsData.interestRate;
+                    currentInvestor = this.currentInvestor;
+                    updateUI();
+                }
+            });
+        }
+    },
+    
+    calculatePendingProfits(investor) {
+        // التحقق من وجود الاستثمارات
+        if (!investor || !investor.investments || investor.investments.length === 0) return 0;
+        
+        // استخدام قيمة افتراضية لنسبة الفائدة إذا لم تكن موجودة في الإعدادات
+        const interestRate = (window.settings && window.settings.interestRate) 
+            ? (window.settings.interestRate / 100) 
+            : 0.175; // قيمة افتراضية 17.5%
+        
+        const today = new Date();
+        let totalProfit = 0;
+        
+        // حساب الأرباح من الاستثمارات النشطة
+        investor.investments.forEach(inv => {
+            // التحقق من وجود المبلغ وأنه أكبر من الصفر
+            if (inv && inv.amount > 0 && inv.date) {
+                try {
+                    const start = new Date(inv.date);
+                    const days = Math.floor((today - start) / (1000 * 60 * 60 * 24));
+                    const profit = (inv.amount * interestRate * days) / 365;
+                    totalProfit += profit;
+                } catch (error) {
+                    console.error("خطأ في حساب الأرباح:", error);
+                    // تجاهل هذا الاستثمار إذا حدث خطأ
+                }
+            }
+        });
+        
+        // خصم الأرباح المدفوعة سابقاً إذا وجدت
+        if (investor.profits && investor.profits.length > 0) {
+            const totalPaidProfits = investor.profits.reduce((sum, profit) => {
+                return sum + (profit.amount || 0);
+            }, 0);
+            totalProfit -= totalPaidProfits;
+        }
+        
+        return Math.max(0, totalProfit); // لا نريد أرباح سالبة
+    },
+    
+    calculateDueDate(investor) {
+        if (!investor.investments || investor.investments.length === 0) return '--';
+        
+        // إذا كان هناك أرباح مدفوعة سابقاً، نحسب من تاريخ آخر دفعة
+        if (investor.profits && investor.profits.length > 0) {
+            const lastProfitDate = new Date(investor.profits[investor.profits.length - 1].date);
+            const nextDue = new Date(lastProfitDate);
+            nextDue.setMonth(nextDue.getMonth() + 1);
+            return formatDate(nextDue.toISOString().split('T')[0]);
+        }
+        
+        // إذا لم يكن هناك أرباح مدفوعة، نحسب من تاريخ أول استثمار
+        const firstInvestmentDate = new Date(investor.investments[0].date);
+        const nextDue = new Date(firstInvestmentDate);
+        nextDue.setMonth(nextDue.getMonth() + 1);
+        
+        return formatDate(nextDue.toISOString().split('T')[0]);
+    },
+    
+    getTransactionType(type) {
+        switch (type.toLowerCase()) {
+            case 'إيداع':
+                return 'deposit';
+            case 'سحب':
+                return 'withdrawal';
+            case 'دفع أرباح':
+                return 'profit';
+            default:
+                return 'unknown';
+        }
+    },
+    
+    clearListeners() {
+        if (this.currentInvestor && this.investorPath) {
+            this.dbRef.ref(this.investorPath).off();
+            this.dbRef.ref(`${this.userPath}/transactions/data`).off();
+            this.dbRef.ref(`${this.userPath}/settings/data`).off();
+        }
+        
+        this.currentInvestor = null;
+        this.userPath = null;
+        this.investorPath = null;
+        window.transactions = [];
+    }
+};
 
 // App Initialization
 document.addEventListener('DOMContentLoaded', function() {
@@ -128,6 +502,257 @@ function setupEventListeners() {
         applyTheme(theme);
         localStorage.setItem('theme', theme);
     });
+}
+
+// Chart Functions
+function initializeCharts() {
+    // تهيئة الرسم البياني للاستثمار
+    initializeInvestmentChart();
+    
+    // تهيئة الرسم البياني للأرباح
+    initializeProfitsChart();
+}
+
+function initializeInvestmentChart() {
+    const ctx = document.getElementById('investment-chart').getContext('2d');
+    
+    // تحويل البيانات إلى تنسيق مناسب للرسم البياني
+    const chartData = prepareInvestmentChartData();
+    
+    // إنشاء الرسم البياني
+    charts.investmentChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: 'الرصيد',
+                data: chartData.balances,
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                borderColor: 'rgba(99, 102, 241, 1)',
+                borderWidth: 2,
+                tension: 0.4,
+                fill: true
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    rtl: true,
+                    titleAlign: 'right',
+                    bodyAlign: 'right',
+                    callbacks: {
+                        label: function(context) {
+                            return `الرصيد: ${formatCurrency(context.raw)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return formatCurrency(value);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function initializeProfitsChart() {
+    const ctx = document.getElementById('profits-chart').getContext('2d');
+    
+    // تحويل البيانات إلى تنسيق مناسب للرسم البياني
+    const profitData = prepareProfitsChartData();
+    
+    // إنشاء الرسم البياني
+    charts.profitsChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: profitData.labels,
+            datasets: [{
+                label: 'الأرباح المستلمة',
+                data: profitData.actual,
+                backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                borderColor: 'rgba(16, 185, 129, 1)',
+                borderWidth: 1
+            },
+            {
+                label: 'الأرباح المتوقعة',
+                data: profitData.expected,
+                backgroundColor: 'rgba(245, 158, 11, 0.5)',
+                borderColor: 'rgba(245, 158, 11, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    rtl: true,
+                    labels: {
+                        boxWidth: 15,
+                        padding: 15
+                    }
+                },
+                tooltip: {
+                    rtl: true,
+                    titleAlign: 'right',
+                    bodyAlign: 'right',
+                    callbacks: {
+                        label: function(context) {
+                            return `${context.dataset.label}: ${formatCurrency(context.raw)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return formatCurrency(value);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function prepareInvestmentChartData() {
+    // ترتيب العمليات حسب التاريخ
+    const sortedTransactions = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    // تحضير البيانات للرسم البياني
+    const labels = [];
+    const balances = [];
+    
+    // بدء من تاريخ الانضمام إذا كان متاحًا
+    let startDate = currentInvestor && currentInvestor.joinDate ? new Date(currentInvestor.joinDate) : null;
+    
+    // إذا لم يكن تاريخ الانضمام متاحًا، استخدم تاريخ أول عملية
+    if (!startDate && sortedTransactions.length > 0) {
+        startDate = new Date(sortedTransactions[0].date);
+    }
+    
+    // إذا لم توجد أي بيانات، استخدم بيانات افتراضية
+    if (!startDate) {
+        return {
+            labels: ['اليوم'],
+            balances: [currentInvestor ? currentInvestor.balance : 0]
+        };
+    }
+    
+    // حساب الرصيد التراكمي
+    let runningBalance = 0;
+    
+    for (const transaction of sortedTransactions) {
+        const transDate = new Date(transaction.date);
+        const formattedDate = formatDate(transaction.date);
+        
+        if (transaction.type === 'deposit') {
+            runningBalance += transaction.amount;
+        } else if (transaction.type === 'withdrawal') {
+            runningBalance -= transaction.amount;
+        }
+        
+        labels.push(formattedDate);
+        balances.push(runningBalance);
+    }
+    
+    // إضافة القيمة الحالية إذا كانت مختلفة عن آخر قيمة
+    if (currentInvestor && (balances.length === 0 || balances[balances.length - 1] !== currentInvestor.balance)) {
+        labels.push('الحالي');
+        balances.push(currentInvestor.balance);
+    }
+    
+    return { labels, balances };
+}
+
+function prepareProfitsChartData() {
+    // الحصول على العمليات المتعلقة بالأرباح
+    const profitTransactions = transactions.filter(t => t.type === 'profit');
+    
+    // إذا لم توجد عمليات ربح، استخدم بيانات افتراضية
+    if (profitTransactions.length === 0) {
+        // حساب الربح الشهري المتوقع
+        const monthlyProfit = currentInvestor ? (currentInvestor.balance * (currentInvestor.interestRate / 100)) / 12 : 0;
+        
+        // إنشاء بيانات لآخر 3 أشهر
+        const labels = [];
+        const expected = [];
+        const actual = [];
+        
+        const today = new Date();
+        
+        for (let i = 2; i >= 0; i--) {
+            const month = new Date(today.getFullYear(), today.getMonth() - i, 1);
+            labels.push(month.toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' }));
+            expected.push(monthlyProfit);
+            actual.push(0);
+        }
+        
+        return { labels, expected, actual };
+    }
+    
+    // تجميع عمليات الربح حسب الشهر
+    const profitsByMonth = {};
+    
+    for (const transaction of profitTransactions) {
+        const date = new Date(transaction.date);
+        const monthKey = `${date.getFullYear()}-${date.getMonth() + 1}`;
+        
+        if (!profitsByMonth[monthKey]) {
+            profitsByMonth[monthKey] = {
+                label: date.toLocaleDateString('ar-EG', { month: 'long', year: 'numeric' }),
+                amount: 0,
+                date: date
+            };
+        }
+        
+        profitsByMonth[monthKey].amount += transaction.amount;
+    }
+    
+    // ترتيب الأشهر تصاعديًا
+    const sortedMonths = Object.values(profitsByMonth).sort((a, b) => a.date - b.date);
+    
+    // حساب الربح الشهري المتوقع
+    const monthlyProfit = currentInvestor ? (currentInvestor.balance * (currentInvestor.interestRate / 100)) / 12 : 0;
+    
+    // إعداد البيانات للرسم البياني
+    const labels = sortedMonths.map(month => month.label);
+    const actual = sortedMonths.map(month => month.amount);
+    const expected = sortedMonths.map(() => monthlyProfit);
+    
+    return { labels, expected, actual };
+}
+
+function updateCharts() {
+    // تحديث بيانات الرسوم البيانية إذا كانت متاحة
+    if (charts.investmentChart) {
+        const investmentData = prepareInvestmentChartData();
+        charts.investmentChart.data.labels = investmentData.labels;
+        charts.investmentChart.data.datasets[0].data = investmentData.balances;
+        charts.investmentChart.update();
+    }
+    
+    if (charts.profitsChart) {
+        const profitsData = prepareProfitsChartData();
+        charts.profitsChart.data.labels = profitsData.labels;
+        charts.profitsChart.data.datasets[0].data = profitsData.actual;
+        charts.profitsChart.data.datasets[1].data = profitsData.expected;
+        charts.profitsChart.update();
+    }
 }
 
 function setupThemeSelector() {
