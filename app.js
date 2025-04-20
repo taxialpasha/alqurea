@@ -145,12 +145,19 @@ const InvestorDataManager = {
         try {
             showSpinner();
             
-            // تنظيف رقم الهاتف
-            const cleanPhone = phoneNumber.replace(/\s/g, '');
+            // إضافة سجلات تتبع (logs) للمساعدة في تشخيص المشكلة
+            console.log("بيانات البحث:", { investorId, phoneNumber });
+            
+            // تنظيف رقم الهاتف مع دعم الصيغة الدولية
+            const cleanPhone = this.normalizePhoneNumber(phoneNumber);
+            console.log("رقم الهاتف بعد التنظيف:", cleanPhone);
             
             // البحث عن بيانات المستثمر في جميع المستخدمين
             const usersSnapshot = await this.dbRef.ref('users').once('value');
             const users = usersSnapshot.val();
+            
+            // سجل للتحقق من بيانات المستخدمين المتاحة
+            console.log("عدد المستخدمين المتوفرين:", Object.keys(users).length);
             
             let investorData = null;
             let foundUserId = null;
@@ -160,22 +167,39 @@ const InvestorDataManager = {
                 currency: 'دينار'
             };
             
-            // البحث في كل مستخدم في النظام
+            // طباعة معرفات المستخدمين للتحقق
+            console.log("معرفات المستخدمين:", Object.keys(users));
+            
+            // البحث في كل مستخدم في النظام مع طباعة معلومات تفصيلية للتشخيص
             for (const userId in users) {
                 if (users[userId].investors && users[userId].investors.data) {
-                    // البحث في مصفوفة المستثمرين
                     const investorsData = users[userId].investors.data;
+                    console.log(`المستخدم ${userId} لديه ${investorsData.length} مستثمر`);
+                    
                     for (let i = 0; i < investorsData.length; i++) {
                         const investor = investorsData[i];
-                        // البحث باستخدام رقم الهاتف والمعرف
-                        const investorCleanPhone = investor.phone ? investor.phone.replace(/\s/g, '') : '';
                         
-                        if (investorCleanPhone === cleanPhone && investor.id === investorId) {
+                        // طباعة معلومات المستثمر للتشخيص
+                        console.log(`مستثمر #${i}:`, { 
+                            id: investor.id, 
+                            phone: investor.phone,
+                            normalizedStoredPhone: this.normalizePhoneNumber(investor.phone)
+                        });
+                        
+                        const investorCleanPhone = investor.phone ? this.normalizePhoneNumber(investor.phone) : '';
+                        
+                        const isPhoneMatch = cleanPhone === investorCleanPhone || 
+                                            cleanPhone.endsWith(investorCleanPhone) || 
+                                            investorCleanPhone.endsWith(cleanPhone);
+                                            
+                        const isIdMatch = investor.id === investorId;
+                        
+                        if (isIdMatch && isPhoneMatch) {
+                            console.log("وجدنا تطابق كامل!");
                             investorData = investor;
                             foundUserId = userId;
                             foundInvestorIndex = i;
                             
-                            // جلب الإعدادات من نفس المستخدم
                             if (users[userId].settings && users[userId].settings.data) {
                                 settings = users[userId].settings.data;
                             }
@@ -187,20 +211,25 @@ const InvestorDataManager = {
             }
             
             if (!investorData) {
+                console.log("لم يتم العثور على أي مستثمر بالمعطيات المدخلة");
                 throw new Error('لم يتم العثور على المستثمر بهذا المعرف أو رقم الهاتف');
             }
             
-            // جلب جميع العمليات المرتبطة بالمستثمر
+            console.log("تم العثور على المستثمر:", investorData);
+            
             let investorTransactions = [];
             if (users[foundUserId].transactions && users[foundUserId].transactions.data) {
                 investorTransactions = users[foundUserId].transactions.data.filter(t => t.investorId === investorData.id);
             }
             
-            // تحويل البيانات للشكل المطلوب
+            console.log(`تم العثور على ${investorTransactions.length} عملية للمستثمر`);
+            
             this.currentInvestor = {
                 id: investorData.id,
                 name: investorData.name,
                 phone: investorData.phone,
+                phoneFormatted: this.formatPhoneNumber(investorData.phone),
+                phoneInternational: this.toInternationalFormat(investorData.phone),
                 joinDate: investorData.joinDate || investorData.createdAt,
                 balance: investorData.amount || 0,
                 profits: this.calculatePendingProfits(investorData),
@@ -208,20 +237,17 @@ const InvestorDataManager = {
                 dueDate: this.calculateDueDate(investorData),
                 address: investorData.address,
                 cardNumber: investorData.cardNumber,
-                email: currentUser.email // إضافة بريد المستخدم المسجل دخوله
+                email: currentUser.email
             };
             
-            // تخزين بيانات المستثمر في التخزين المحلي
             localStorage.setItem('investorData', JSON.stringify({
                 id: investorData.id,
                 phone: cleanPhone
             }));
             
-            // تخزين مسار البيانات للتحديثات في الوقت الحقيقي
             this.userPath = `users/${foundUserId}`;
             this.investorPath = `${this.userPath}/investors/data/${foundInvestorIndex}`;
             
-            // تحويل العمليات للشكل المطلوب
             window.transactions = investorTransactions.map(t => ({
                 id: t.id,
                 type: this.getTransactionType(t.type),
@@ -232,11 +258,10 @@ const InvestorDataManager = {
                 balanceAfter: t.balanceAfter
             }));
             
-            // تحديث الإعدادات العامة
             window.settings = settings;
-            
-            // إعداد المستمعين للتحديثات في الوقت الحقيقي
             this.setupRealtimeListeners(investorData.id);
+            
+            console.log("تم تجهيز بيانات المستثمر بنجاح!");
             
             hideSpinner();
             currentInvestor = this.currentInvestor;
@@ -394,6 +419,24 @@ const InvestorDataManager = {
         this.userPath = null;
         this.investorPath = null;
         window.transactions = [];
+    },
+
+    // تحسين دالة تنظيف رقم الهاتف
+    normalizePhoneNumber(phoneNumber) {
+        if (!phoneNumber) return '';
+        let cleanPhone = phoneNumber.toString().replace(/[\s\-\(\)]/g, '');
+        if (cleanPhone.startsWith('+964')) {
+            cleanPhone = '0' + cleanPhone.substring(4);
+        }
+        if (!/^[0+]/.test(cleanPhone) && cleanPhone.length === 10) {
+            cleanPhone = '0' + cleanPhone;
+        }
+        if (cleanPhone.startsWith('+')) {
+            cleanPhone = '+' + cleanPhone.substring(1).replace(/\D/g, '');
+        } else {
+            cleanPhone = cleanPhone.replace(/\D/g, '');
+        }
+        return cleanPhone;
     }
 };
 
@@ -1466,4 +1509,364 @@ window.addEventListener('online', () => {
 
 window.addEventListener('offline', () => {
     showNotification('تم فقد الاتصال بالإنترنت', 'error');
+});
+
+
+
+
+// تحديث واجهة التحقق من المستثمر
+function updateInvestorVerificationUI() {
+    // تحديث نموذج التحقق
+    const verifyCard = document.querySelector('.investor-verify-card');
+    
+    // تحديث مثال رقم الهاتف ليشمل الصيغة الدولية
+    const phoneInput = document.getElementById('investor-phone-input');
+    if (phoneInput) {
+        phoneInput.placeholder = "أدخل رقم الهاتف (محلي أو دولي)";
+        
+        // تحديث نص المساعدة
+        const verifyNote = verifyCard.querySelector('.verify-note');
+        if (verifyNote) {
+            verifyNote.innerHTML = "مثال: 07813798678 أو +964 787 667 6617";
+        } else {
+            // إنشاء نص المساعدة إذا لم يكن موجوداً
+            const verifyNoteNew = document.createElement('small');
+            verifyNoteNew.className = 'verify-note';
+            verifyNoteNew.innerHTML = "مثال: 07813798678 أو +964 787 667 6617";
+            phoneInput.parentNode.insertBefore(verifyNoteNew, phoneInput.nextSibling);
+        }
+    }
+}
+
+// دالة تنظيف رقم الهاتف - تعمل مع الصيغ المحلية والدولية
+function cleanPhoneNumber(phoneNumber) {
+    if (!phoneNumber) return '';
+    
+    // إزالة جميع المسافات والرموز غير الأرقام باستثناء + للصيغة الدولية
+    let cleanedPhone = phoneNumber.replace(/\s+/g, '');
+    
+    // تحويل الصيغة الدولية العراقية (+964) إلى الصيغة المحلية (0)
+    if (cleanedPhone.startsWith('+964')) {
+        // حذف +964 واستبداله بـ 0
+        cleanedPhone = '0' + cleanedPhone.substring(4);
+    }
+    
+    return cleanedPhone;
+}
+
+// دالة تنظيف رقم الهاتف - تعمل مع الصيغ المحلية والدولية
+function cleanPhoneNumber(phoneNumber) {
+    if (!phoneNumber) return '';
+    
+    // إزالة جميع المسافات والرموز غير الأرقام باستثناء + للصيغة الدولية
+    let cleanedPhone = phoneNumber.replace(/\s+/g, '');
+    
+    // تحويل الصيغة الدولية العراقية (+964) إلى الصيغة المحلية (0)
+    if (cleanedPhone.startsWith('+964')) {
+        // حذف +964 واستبداله بـ 0
+        cleanedPhone = '0' + cleanedPhone.substring(4);
+    }
+    
+    return cleanedPhone;
+}
+
+// تعديل وظيفة التحقق من أرقام الهواتف
+function isValidPhoneNumber(phoneNumber) {
+    const cleanedPhone = cleanPhoneNumber(phoneNumber);
+    
+    // التحقق من الصيغة المحلية (يبدأ بـ 0 ويتبعه 10 أرقام)
+    const localPattern = /^0\d{10}$/;
+    
+    return localPattern.test(cleanedPhone);
+}
+
+// تحديث وظيفة معالجة حقل إدخال رقم الهاتف
+function setupPhoneInputHandler() {
+    const phoneInput = document.getElementById('investor-phone-input');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value;
+            
+            // السماح بإدخال الرمز + للصيغة الدولية
+            if (value && !value.startsWith('+') && value.includes('+')) {
+                // إذا أدخل المستخدم + في وسط الرقم، ننقله إلى البداية
+                value = '+' + value.replace(/\+/g, '');
+            }
+            
+            e.target.value = value;
+        });
+    }
+}
+
+// تحديث وظيفة التحقق من المستثمر
+async function verifyInvestor(investorId, phoneNumber) {
+    try {
+        showSpinner();
+        
+        // تنظيف رقم الهاتف مع دعم الصيغة الدولية
+        const cleanPhone = cleanPhoneNumber(phoneNumber);
+        
+        // البحث عن بيانات المستثمر في جميع المستخدمين
+        const usersSnapshot = await firebase.database().ref('users').once('value');
+        const users = usersSnapshot.val();
+        
+        let investorData = null;
+        let foundUserId = null;
+        let foundInvestorIndex = null;
+        let settings = {
+            interestRate: 17.5,
+            currency: 'دينار'
+        };
+        
+        // البحث في كل مستخدم في النظام
+        for (const userId in users) {
+            if (users[userId].investors && users[userId].investors.data) {
+                // البحث في مصفوفة المستثمرين
+                const investorsData = users[userId].investors.data;
+                for (let i = 0; i < investorsData.length; i++) {
+                    const investor = investorsData[i];
+                    
+                    // البحث باستخدام رقم الهاتف والمعرف
+                    // تنظيف رقم هاتف المستثمر المخزن لمقارنته مع الرقم المدخل
+                    const investorCleanPhone = investor.phone ? cleanPhoneNumber(investor.phone) : '';
+                    
+                    if (investorCleanPhone === cleanPhone && investor.id === investorId) {
+                        investorData = investor;
+                        foundUserId = userId;
+                        foundInvestorIndex = i;
+                        
+                        // جلب الإعدادات من نفس المستخدم
+                        if (users[userId].settings && users[userId].settings.data) {
+                            settings = users[userId].settings.data;
+                        }
+                        break;
+                    }
+                }
+            }
+            if (investorData) break;
+        }
+        
+        if (!investorData) {
+            throw new Error('لم يتم العثور على المستثمر بهذا المعرف أو رقم الهاتف');
+        }
+        
+        // بقية الكود لمعالجة بيانات المستثمر
+        // ...
+        
+        hideSpinner();
+        return investorData;
+    } catch (error) {
+        hideSpinner();
+        console.error("Error verifying investor:", error);
+        throw error;
+    }
+}
+
+// تحديث وظيفة التحقق من إدخالات المستثمر
+function validateInvestorForm(investorId, phoneNumber) {
+    let hasError = false;
+    
+    // التحقق من معرف المستثمر
+    if (!investorId || investorId.trim() === '') {
+        showFieldError('investor-id', 'الرجاء إدخال معرف المستثمر');
+        hasError = true;
+    }
+    
+    // التحقق من رقم الهاتف
+    if (!phoneNumber || phoneNumber.trim() === '') {
+        showFieldError('investor-phone', 'الرجاء إدخال رقم الهاتف');
+        hasError = true;
+    } else {
+        // تنظيف الرقم ثم التحقق منه
+        const cleanedPhone = cleanPhoneNumber(phoneNumber);
+        
+        if (!isValidPhoneNumber(cleanedPhone)) {
+            showFieldError('investor-phone', 'يرجى إدخال رقم هاتف صحيح بصيغة محلية أو دولية');
+            hasError = true;
+        }
+    }
+    
+    return !hasError;
+}
+
+// تحديث معالج التحقق من المستثمر
+async function handleInvestorVerification() {
+    clearErrors();
+    
+    const investorId = document.getElementById('investor-id-input').value.trim();
+    const phoneNumber = document.getElementById('investor-phone-input').value.trim();
+    
+    // التحقق من الإدخالات باستخدام الدالة المحدثة
+    if (!validateInvestorForm(investorId, phoneNumber)) {
+        return;
+    }
+    
+    try {
+        // استخدام الدالة المحدثة للتحقق من بيانات المستثمر
+        await InvestorDataManager.verifyInvestor(investorId, phoneNumber);
+        
+        // نجاح التحقق، عرض واجهة التطبيق
+        showApp();
+        updateUI();
+        initializeCharts();
+        showNotification(`مرحباً ${currentInvestor.name}`, 'success');
+    } catch (error) {
+        showNotification(error.message, 'error');
+    }
+}
+
+// تحديث دالة الاختبار من InvestorDataManager
+InvestorDataManager.verifyInvestor = async function(investorId, phoneNumber) {
+    try {
+        showSpinner();
+        
+        // تنظيف رقم الهاتف مع دعم الصيغة الدولية
+        const cleanPhone = cleanPhoneNumber(phoneNumber);
+        
+        // البحث عن بيانات المستثمر في جميع المستخدمين
+        const usersSnapshot = await this.dbRef.ref('users').once('value');
+        const users = usersSnapshot.val();
+        
+        let investorData = null;
+        let foundUserId = null;
+        let foundInvestorIndex = null;
+        let settings = {
+            interestRate: 17.5,
+            currency: 'دينار'
+        };
+        
+        // البحث في كل مستخدم في النظام
+        for (const userId in users) {
+            if (users[userId].investors && users[userId].investors.data) {
+                // البحث في مصفوفة المستثمرين
+                const investorsData = users[userId].investors.data;
+                for (let i = 0; i < investorsData.length; i++) {
+                    const investor = investorsData[i];
+                    
+                    // تنظيف رقم هاتف المستثمر المخزن للمقارنة
+                    const investorCleanPhone = investor.phone ? cleanPhoneNumber(investor.phone) : '';
+                    
+                    if (investorCleanPhone === cleanPhone && investor.id === investorId) {
+                        investorData = investor;
+                        foundUserId = userId;
+                        foundInvestorIndex = i;
+                        
+                        // جلب الإعدادات من نفس المستخدم
+                        if (users[userId].settings && users[userId].settings.data) {
+                            settings = users[userId].settings.data;
+                        }
+                        break;
+                    }
+                }
+            }
+            if (investorData) break;
+        }
+        
+        if (!investorData) {
+            throw new Error('لم يتم العثور على المستثمر بهذا المعرف أو رقم الهاتف');
+        }
+        
+        // جلب جميع العمليات المرتبطة بالمستثمر
+        let investorTransactions = [];
+        if (users[foundUserId].transactions && users[foundUserId].transactions.data) {
+            investorTransactions = users[foundUserId].transactions.data.filter(t => t.investorId === investorData.id);
+        }
+        
+        // تحويل البيانات للشكل المطلوب
+        this.currentInvestor = {
+            id: investorData.id,
+            name: investorData.name,
+            phone: investorData.phone, // الاحتفاظ بالصيغة الأصلية للرقم
+            joinDate: investorData.joinDate || investorData.createdAt,
+            balance: investorData.amount || 0,
+            profits: this.calculatePendingProfits(investorData),
+            interestRate: settings.interestRate,
+            dueDate: this.calculateDueDate(investorData),
+            address: investorData.address,
+            cardNumber: investorData.cardNumber,
+            email: currentUser.email // إضافة بريد المستخدم المسجل دخوله
+        };
+        
+        // تخزين بيانات المستثمر في التخزين المحلي
+        localStorage.setItem('investorData', JSON.stringify({
+            id: investorData.id,
+            phone: cleanPhone // تخزين الرقم بعد التنظيف
+        }));
+        
+        // تخزين مسار البيانات للتحديثات في الوقت الحقيقي
+        this.userPath = `users/${foundUserId}`;
+        this.investorPath = `${this.userPath}/investors/data/${foundInvestorIndex}`;
+        
+        // تحويل العمليات للشكل المطلوب
+        window.transactions = investorTransactions.map(t => ({
+            id: t.id,
+            type: this.getTransactionType(t.type),
+            typeAr: t.type,
+            amount: t.amount,
+            date: t.date,
+            description: t.notes || '',
+            balanceAfter: t.balanceAfter
+        }));
+        
+        // تحديث الإعدادات العامة
+        window.settings = settings;
+        
+        // إعداد المستمعين للتحديثات في الوقت الحقيقي
+        this.setupRealtimeListeners(investorData.id);
+        
+        hideSpinner();
+        currentInvestor = this.currentInvestor;
+        return currentInvestor;
+    } catch (error) {
+        hideSpinner();
+        console.error("Error verifying investor:", error);
+        throw error;
+    }
+};
+
+// دالة التهيئة - تضاف في آخر initApp() أو setup()
+function initPhoneValidation() {
+    updateInvestorVerificationUI();
+    setupPhoneInputHandler();
+    
+    // استبدال معالج حدث التحقق
+    const verifyBtn = document.getElementById('verify-btn');
+    if (verifyBtn) {
+        verifyBtn.removeEventListener('click', handleInvestorVerification);
+        verifyBtn.addEventListener('click', handleInvestorVerification);
+    }
+    
+    // تحديث معالج الإدخال لرقم الهاتف
+    const phoneInput = document.getElementById('investor-phone-input');
+    if (phoneInput) {
+        phoneInput.removeEventListener('input', function(){});
+        phoneInput.addEventListener('input', function(e) {
+            // السماح بإدخال أرقام والرمز + والمسافات
+            let value = e.target.value;
+            
+            // السماح بـ + في بداية الرقم فقط
+            if (value.indexOf('+') > 0) {
+                value = '+' + value.replace(/\+/g, '');
+            }
+            
+            // السماح بإدخال الأرقام والرمز + والمسافات فقط
+            value = value.replace(/[^\d\s+]/g, '');
+            
+            e.target.value = value;
+        });
+        
+        // تحديث معالج مفتاح Enter
+        phoneInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') handleInvestorVerification();
+        });
+    }
+}
+
+// استدعاء دوال التهيئة عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    // بقية دوال التهيئة
+    // ...
+    
+    // تهيئة التحقق من أرقام الهواتف
+    initPhoneValidation();
 });
