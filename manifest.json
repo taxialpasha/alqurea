@@ -11,42 +11,50 @@
         {
             "src": "https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802",
             "sizes": "72x72",
-            "type": "https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802"
+            "type": "image/png",
+            "purpose": "any maskable"
         },
         {
-            "src": "assets/icons/icon-96x96.png",
+            "src": "https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802",
             "sizes": "96x96",
-            "type": "https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802"
+            "type": "image/png",
+            "purpose": "any maskable"
         },
         {
             "src": "https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802",
             "sizes": "128x128",
-            "type": "https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802"
+            "type": "image/png",
+            "purpose": "any maskable"
         },
         {
             "src": "https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802",
             "sizes": "144x144",
-            "type": "https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802"
+            "type": "image/png",
+            "purpose": "any maskable"
         },
         {
             "src": "https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802",
             "sizes": "152x152",
-            "type": "https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802"
+            "type": "image/png",
+            "purpose": "any maskable"
         },
         {
             "src": "https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802",
             "sizes": "192x192",
-            "type": "https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802"
+            "type": "image/png",
+            "purpose": "any maskable"
         },
         {
             "src": "https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802",
             "sizes": "384x384",
-            "type": "https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802"
+            "type": "image/png",
+            "purpose": "any maskable"
         },
         {
             "src": "https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802",
             "sizes": "512x512",
-            "type": "https://firebasestorage.googleapis.com/v0/b/messageemeapp.appspot.com/o/icon.png?alt=media&token=7e824800-0d53-4e7a-9e99-21f73b2a8802"
+            "type": "image/png",
+            "purpose": "any maskable"
         }
     ]
 }
