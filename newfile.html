@@ -1,0 +1,3701 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#6366f1">
+    <link rel="manifest" href="manifest.json">
+    <title>محفظة المستثمر</title>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    
+    <style>
+        :root {
+            /* أساسي */
+            --color-primary: #6366f1;
+            --color-primary-dark: #4f46e5;
+            --color-primary-light: #818cf8;
+            
+            /* ثانوي */
+            --color-secondary: #0ea5e9;
+            --color-secondary-dark: #0284c7;
+            --color-secondary-light: #38bdf8;
+            
+            /* نجاح */
+            --color-success: #10b981;
+            --color-success-dark: #059669;
+            --color-success-light: #34d399;
+            
+            /* خطر */
+            --color-danger: #ef4444;
+            --color-danger-dark: #dc2626;
+            --color-danger-light: #f87171;
+            
+            /* تحذير */
+            --color-warning: #f59e0b;
+            --color-warning-dark: #d97706;
+            --color-warning-light: #fbbf24;
+            
+            /* محايد */
+            --color-gray-50: #f9fafb;
+            --color-gray-100: #f3f4f6;
+            --color-gray-200: #e5e7eb;
+            --color-gray-300: #d1d5db;
+            --color-gray-400: #9ca3af;
+            --color-gray-500: #6b7280;
+            --color-gray-600: #4b5563;
+            --color-gray-700: #374151;
+            --color-gray-800: #1f2937;
+            --color-gray-900: #111827;
+            
+            /* خلفية وتنسيق */
+            --surface-bg: var(--color-gray-50);
+            --card-bg: #ffffff;
+            --text-color: var(--color-gray-900);
+            --text-muted: var(--color-gray-500);
+            
+            /* زوايا وظلال */
+            --radius-sm: 6px;
+            --radius-md: 12px;
+            --radius-lg: 18px;
+            --radius-round: 50%;
+            
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            
+            /* تباعد وحجم */
+            --spacing-1: 4px;
+            --spacing-2: 8px;
+            --spacing-3: 12px;
+            --spacing-4: 16px;
+            --spacing-5: 20px;
+            --spacing-6: 24px;
+            --spacing-8: 32px;
+            --spacing-10: 40px;
+            --spacing-12: 48px;
+            
+            /* انتقالات */
+            --transition-fast: 150ms ease;
+            --transition-normal: 250ms ease;
+            --transition-slow: 350ms ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background-color: var(--surface-bg);
+            color: var(--text-color);
+            min-height: 100vh;
+            overflow-x: hidden;
+            padding-bottom: 80px;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app-container {
+            padding: 1rem;
+            padding-top: 5rem;
+            padding-bottom: 5rem;
+            max-width: 480px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4rem;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+            color: white;
+            padding: 0 var(--spacing-4);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+            box-shadow: var(--shadow-md);
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+
+        .header-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-round);
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .header-icon:active {
+            transform: scale(0.95);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 65px;
+            background: var(--card-bg);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 -1px 10px rgba(0, 0, 0, 0.05);
+            z-index: 100;
+            border-top-left-radius: var(--radius-lg);
+            border-top-right-radius: var(--radius-lg);
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--color-gray-400);
+            text-decoration: none;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: color var(--transition-fast);
+            position: relative;
+        }
+
+        .nav-item.active {
+            color: var(--color-primary);
+        }
+        
+        .nav-item.active::after {
+            content: '';
+            position: absolute;
+            bottom: 12px;
+            width: 5px;
+            height: 5px;
+            background: var(--color-primary);
+            border-radius: var(--radius-round);
+        }
+
+        .nav-item i {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        /* Pages */
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-6);
+            margin-bottom: var(--spacing-5);
+            box-shadow: var(--shadow-md);
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:active {
+            transform: scale(0.98);
+        }
+        
+        .card-header {
+            margin-bottom: var(--spacing-4);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .card-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: var(--color-gray-800);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-2);
+        }
+        
+        .card-title i {
+            color: var(--color-primary);
+        }
+        
+        .card-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: var(--spacing-1);
+        }
+        
+        .card-action {
+            color: var(--color-primary);
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Balance Card */
+        .balance-card {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+            color: white;
+            position: relative;
+            overflow: hidden;
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+        }
+
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            transform: rotate(-30deg);
+        }
+        
+        .balance-card-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .balance-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-4);
+            position: relative;
+            z-index: 2;
+        }
+
+        .balance-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .balance-amount {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin: 0.5rem 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .balance-details {
+            display: flex;
+            justify-content: space-between;
+            margin-top: var(--spacing-4);
+            padding-top: var(--spacing-4);
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            z-index: 2;
+        }
+
+        .balance-detail {
+            text-align: center;
+        }
+
+        .balance-detail-label {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        .balance-detail-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-top: 0.25rem;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: var(--spacing-3);
+            margin: var(--spacing-6) 0;
+            overflow-x: auto;
+            padding-bottom: var(--spacing-3);
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none; /* IE and Edge */
+        }
+        
+        .quick-actions::-webkit-scrollbar {
+            display: none; /* Chrome, Safari, Opera */
+        }
+
+        .quick-action {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-4);
+            min-width: 110px;
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            text-decoration: none;
+            color: var(--text-color);
+            transition: all var(--transition-normal);
+            border: 1px solid var(--color-gray-100);
+        }
+
+        .quick-action:active {
+            transform: scale(0.95);
+            background: var(--color-gray-50);
+        }
+
+        .quick-action i {
+            font-size: 1.5rem;
+            color: var(--color-primary);
+            margin-bottom: var(--spacing-3);
+            background: var(--color-gray-100);
+            width: 50px;
+            height: 50px;
+            border-radius: var(--radius-round);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-normal);
+        }
+        
+        .quick-action:active i {
+            background: var(--color-primary-light);
+            color: white;
+        }
+
+        .quick-action span {
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        /* Transaction List */
+        .transaction-list {
+            margin-top: var(--spacing-3);
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--spacing-4);
+            border-bottom: 1px solid var(--color-gray-100);
+            transition: background-color var(--transition-fast);
+        }
+        
+        .transaction-item:hover {
+            background-color: var(--color-gray-50);
+        }
+
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-icon {
+            width: 45px;
+            height: 45px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: var(--spacing-4);
+            transition: transform var(--transition-fast);
+        }
+        
+        .transaction-item:active .transaction-icon {
+            transform: scale(0.9);
+        }
+
+        .transaction-icon.deposit {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--color-success);
+        }
+
+        .transaction-icon.withdrawal {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--color-danger);
+        }
+
+        .transaction-icon.profit {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--color-warning);
+        }
+
+        .transaction-details {
+            flex: 1;
+        }
+
+        .transaction-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .transaction-date {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .transaction-amount {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .transaction-amount.positive {
+            color: var(--color-success);
+        }
+
+        .transaction-amount.negative {
+            color: var(--color-danger);
+        }
+
+        /* Stats Card */
+        .stats-card {
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-5);
+            margin-bottom: var(--spacing-5);
+            box-shadow: var(--shadow-md);
+            transition: all var(--transition-normal);
+            display: flex;
+            flex-direction: column;
+            color: white;
+        }
+        
+        .stats-card.primary {
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+        }
+        
+        .stats-card.success {
+            background: linear-gradient(135deg, var(--color-success), var(--color-success-dark));
+        }
+        
+        .stats-card.warning {
+            background: linear-gradient(135deg, var(--color-warning), var(--color-warning-dark));
+        }
+
+        .stats-label {
+            font-size: 0.875rem;
+            opacity: 0.9;
+            margin-bottom: var(--spacing-2);
+        }
+
+        .stats-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-4);
+            margin-bottom: var(--spacing-5);
+        }
+
+        /* Form Elements */
+        .form-group {
+            margin-bottom: var(--spacing-5);
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 500;
+            margin-bottom: var(--spacing-2);
+            color: var(--text-color);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: var(--spacing-4);
+            border: 1px solid var(--color-gray-200);
+            border-radius: var(--radius-md);
+            font-size: 1rem;
+            background-color: var(--card-bg);
+            transition: all var(--transition-normal);
+            color: var(--text-color);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--color-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .form-input.error {
+            border-color: var(--color-danger);
+        }
+
+        .form-error {
+            color: var(--color-danger);
+            font-size: 0.8rem;
+            margin-top: var(--spacing-1);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-4) var(--spacing-6);
+            font-size: 1rem;
+            font-weight: 500;
+            border-radius: var(--radius-md);
+            border: none;
+            cursor: pointer;
+            transition: all var(--transition-normal);
+            width: 100%;
+        }
+
+        .btn-primary {
+            background-color: var(--color-primary);
+            color: white;
+        }
+
+        .btn-primary:active {
+            background-color: var(--color-primary-dark);
+            transform: translateY(1px);
+        }
+
+        .btn-secondary {
+            background-color: var(--color-gray-200);
+            color: var(--color-gray-700);
+        }
+
+        .btn-secondary:active {
+            background-color: var(--color-gray-300);
+            transform: translateY(1px);
+        }
+        
+        .btn-success {
+            background-color: var(--color-success);
+            color: white;
+        }
+        
+        .btn-success:active {
+            background-color: var(--color-success-dark);
+            transform: translateY(1px);
+        }
+        
+        .btn-danger {
+            background-color: var(--color-danger);
+            color: white;
+        }
+        
+        .btn-danger:active {
+            background-color: var(--color-danger-dark);
+            transform: translateY(1px);
+        }
+        
+        .btn-icon {
+            margin-left: var(--spacing-2);
+            font-size: 1.25rem;
+        }
+
+        /* Auth Screens */
+        .auth-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: var(--spacing-6);
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .auth-bg-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.05;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+        }
+
+        .auth-logo {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: var(--spacing-8);
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-logo i {
+            font-size: 3rem;
+            color: var(--color-primary);
+        }
+
+        .auth-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-2);
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-subtitle {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-bottom: var(--spacing-8);
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-form {
+            width: 100%;
+            max-width: 350px;
+            position: relative;
+            z-index: 1;
+            background: rgba(255, 255, 255, 0.1);
+            padding: var(--spacing-6);
+            border-radius: var(--radius-lg);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .auth-form .form-input {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .auth-form .form-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .auth-form .form-label {
+            color: white;
+            text-align: right;
+        }
+
+        .auth-form .btn {
+            background: white;
+            color: var(--color-primary);
+            font-weight: 600;
+            margin-top: var(--spacing-4);
+        }
+
+        .auth-toggle {
+            margin-top: var(--spacing-5);
+            font-size: 0.875rem;
+            opacity: 0.9;
+        }
+
+        .auth-toggle a {
+            color: white;
+            font-weight: 600;
+            text-decoration: underline;
+        }
+
+        /* Investor Verification Screen */
+        .investor-verify-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: var(--spacing-6);
+            background: white;
+            color: var(--text-color);
+            text-align: center;
+            position: relative;
+        }
+        
+        .investor-verify-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 30%;
+            background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+            border-bottom-left-radius: 30px;
+            border-bottom-right-radius: 30px;
+        }
+
+        .investor-verify-card {
+            position: relative;
+            z-index: 1;
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-8);
+            box-shadow: var(--shadow-xl);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .investor-verify-icon {
+            width: 80px;
+            height: 80px;
+            background: var(--color-primary);
+            border-radius: var(--radius-round);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto var(--spacing-6) auto;
+            font-size: 2.5rem;
+            color: white;
+        }
+
+        .investor-verify-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: var(--spacing-2);
+            color: var(--color-gray-900);
+        }
+
+        .investor-verify-subtitle {
+            font-size: 0.875rem;
+            color: var(--color-gray-500);
+            margin-bottom: var(--spacing-6);
+            max-width: 280px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .verify-note {
+            margin-top: var(--spacing-4);
+            font-size: 0.875rem;
+            color: var(--color-gray-500);
+            background: var(--color-gray-50);
+            padding: var(--spacing-4);
+            border-radius: var(--radius-md);
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.8);
+            z-index: 1100;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .spinner.active {
+            display: flex;
+        }
+
+        .spinner::after {
+            content: '';
+            width: 50px;
+            height: 50px;
+            border: 3px solid var(--color-gray-200);
+            border-top-color: var(--color-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 1.5rem;
+            left: 1rem;
+            right: 1rem;
+            padding: var(--spacing-4);
+            border-radius: var(--radius-md);
+            background: var(--card-bg);
+            box-shadow: var(--shadow-xl);
+            transform: translateY(-100%);
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 1200;
+            display: flex;
+            align-items: center;
+        }
+
+        .notification.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .notification.success {
+            border-right: 4px solid var(--color-success);
+        }
+
+        .notification.error {
+            border-right: 4px solid var(--color-danger);
+        }
+
+        .notification.info {
+            border-right: 4px solid var(--color-primary);
+        }
+        
+        .notification.warning {
+            border-right: 4px solid var(--color-warning);
+        }
+        
+        .notification-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: var(--spacing-3);
+        }
+        
+        .notification.success .notification-icon {
+            background-color: rgba(16, 185, 129, 0.1);
+            color: var(--color-success);
+        }
+        
+        .notification.error .notification-icon {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--color-danger);
+        }
+        
+        .notification.info .notification-icon {
+            background-color: rgba(99, 102, 241, 0.1);
+            color: var(--color-primary);
+        }
+        
+        .notification.warning .notification-icon {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--color-warning);
+        }
+        
+        /* Charts */
+        .chart-container {
+            width: 100%;
+            height: 250px;
+            margin: var(--spacing-4) 0;
+        }
+
+        /* Profit details styles */
+        .profit-summary {
+            background: var(--color-gray-50);
+            padding: var(--spacing-4);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--spacing-4);
+        }
+        
+        .profit-details {
+            margin-top: var(--spacing-5);
+        }
+        
+        .profit-details-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: var(--spacing-3);
+            padding-bottom: var(--spacing-3);
+            border-bottom: 1px solid var(--color-gray-100);
+        }
+        
+        .profit-details-item:last-child {
+            border-bottom: none;
+        }
+        
+        .profit-details-label {
+            color: var(--color-gray-600);
+        }
+        
+        .profit-details-value {
+            font-weight: 600;
+        }
+        
+        .profit-note {
+            margin-top: var(--spacing-5);
+            padding: var(--spacing-4);
+            background: rgba(245, 158, 11, 0.1);
+            border-radius: var(--radius-md);
+            color: var(--color-warning-dark);
+            display: flex;
+            align-items: flex-start;
+        }
+        
+        .profit-note i {
+            margin-left: var(--spacing-3);
+            margin-top: 3px;
+        }
+
+        /* Empty State */
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-8) var(--spacing-4);
+            text-align: center;
+        }
+        
+        .empty-state-icon {
+            width: 70px;
+            height: 70px;
+            background: var(--color-gray-100);
+            border-radius: var(--radius-round);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: var(--color-gray-400);
+            margin-bottom: var(--spacing-4);
+        }
+        
+        .empty-state-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-2);
+            color: var(--color-gray-800);
+        }
+        
+        .empty-state-message {
+            color: var(--color-gray-500);
+            max-width: 250px;
+            margin: 0 auto;
+        }
+
+        /* Dark Mode */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --surface-bg: var(--color-gray-900);
+                --card-bg: var(--color-gray-800);
+                --text-color: var(--color-gray-50);
+                --text-muted: var(--color-gray-400);
+            }
+
+            .form-input {
+                background-color: var(--color-gray-700);
+                color: var(--color-gray-100);
+                border-color: var(--color-gray-600);
+            }
+            
+            .investor-verify-container {
+                background: var(--color-gray-900);
+                color: var(--color-gray-100);
+            }
+            
+            .investor-verify-card {
+                background: var(--color-gray-800);
+            }
+            
+            .card {
+                border: 1px solid var(--color-gray-700);
+            }
+            
+            .quick-action {
+                background: var(--color-gray-800);
+                border-color: var(--color-gray-700);
+            }
+            
+            .quick-action i {
+                background: var(--color-gray-700);
+            }
+            
+            .transaction-item {
+                border-color: var(--color-gray-700);
+            }
+            
+            .transaction-item:hover {
+                background-color: var(--color-gray-700);
+            }
+            
+            .empty-state-icon {
+                background: var(--color-gray-700);
+                color: var(--color-gray-500);
+            }
+            
+            .profit-summary {
+                background: var(--color-gray-700);
+            }
+            
+            .profit-details-item {
+                border-color: var(--color-gray-700);
+            }
+            
+            .notification {
+                background: var(--color-gray-800);
+            }
+            
+            .spinner {
+                background: rgba(17, 24, 39, 0.8);
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 375px) {
+            .balance-amount {
+                font-size: 1.75rem;
+            }
+            
+            .quick-actions {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: var(--spacing-3);
+            }
+            
+            .quick-action {
+                min-width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Main Auth Screen -->
+    <div id="auth-screen" class="auth-container">
+        <div class="auth-bg-pattern"></div>
+        <div class="auth-logo">
+            <i class="fas fa-wallet"></i>
+        </div>
+        <h1 class="auth-title">محفظة المستثمر</h1>
+        <p class="auth-subtitle">قم بتسجيل الدخول لإدارة استثماراتك بكل سهولة</p>
+        
+        <!-- Login Form -->
+        <div id="login-form" class="auth-form">
+            <div class="form-group">
+                <label class="form-label">البريد الإلكتروني</label>
+                <input type="email" id="login-email" class="form-input" placeholder="أدخل البريد الإلكتروني" dir="ltr" required>
+                <div class="form-error" id="login-email-error"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">كلمة المرور</label>
+                <input type="password" id="login-password" class="form-input" placeholder="أدخل كلمة المرور" dir="ltr" required>
+                <div class="form-error" id="login-password-error"></div>
+            </div>
+            <button id="login-btn" class="btn">
+                <i class="fas fa-sign-in-alt btn-icon"></i>
+                تسجيل الدخول
+            </button>
+            <div class="auth-toggle">
+                ليس لديك حساب؟ <a href="#" id="show-register">إنشاء حساب جديد</a>
+            </div>
+        </div>
+        
+        <!-- Register Form -->
+        <div id="register-form" class="auth-form" style="display: none;">
+            <div class="form-group">
+                <label class="form-label">الاسم الكامل</label>
+                <input type="text" id="register-name" class="form-input" placeholder="أدخل الاسم الكامل" required>
+                <div class="form-error" id="register-name-error"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">البريد الإلكتروني</label>
+                <input type="email" id="register-email" class="form-input" placeholder="أدخل البريد الإلكتروني" dir="ltr" required>
+                <div class="form-error" id="register-email-error"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">كلمة المرور</label>
+                <input type="password" id="register-password" class="form-input" placeholder="أدخل كلمة المرور (6 أحرف على الأقل)" dir="ltr" required>
+                <div class="form-error" id="register-password-error"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">تأكيد كلمة المرور</label>
+                <input type="password" id="register-confirm-password" class="form-input" placeholder="أعد إدخال كلمة المرور" dir="ltr" required>
+                <div class="form-error" id="register-confirm-password-error"></div>
+            </div>
+            <button id="register-btn" class="btn">
+                <i class="fas fa-user-plus btn-icon"></i>
+                إنشاء حساب
+            </button>
+            <div class="auth-toggle">
+                لديك حساب بالفعل؟ <a href="#" id="show-login">تسجيل الدخول</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Investor Verification Screen -->
+    <div id="investor-verify-screen" class="investor-verify-container" style="display: none;">
+        <div class="investor-verify-card">
+            <div class="investor-verify-icon">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <h2 class="investor-verify-title">تحقق من هويتك كمستثمر</h2>
+            <p class="investor-verify-subtitle">قم بإدخال معرف المستثمر ورقم الهاتف للوصول إلى بياناتك الاستثمارية</p>
+            
+            <div class="auth-form" style="padding: 0; background: none; backdrop-filter: none; box-shadow: none;">
+                <div class="form-group">
+                    <label class="form-label">معرف المستثمر (ID)</label>
+                    <input type="text" id="investor-id-input" class="form-input" placeholder="أدخل معرف المستثمر" required>
+                    <div class="form-error" id="investor-id-error"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">رقم الهاتف</label>
+                    <input type="tel" id="investor-phone-input" class="form-input" placeholder="أدخل رقم الهاتف" dir="ltr" required>
+                    <small class="verify-note">مثال: 07813798678</small>
+                    <div class="form-error" id="investor-phone-error"></div>
+                </div>
+                <button id="verify-btn" class="btn btn-primary">
+                    <i class="fas fa-check-circle btn-icon"></i>
+                    التحقق والدخول
+                </button>
+                <button id="logout-auth-btn" class="btn btn-secondary" style="margin-top: var(--spacing-4);">
+                    <i class="fas fa-sign-out-alt btn-icon"></i>
+                    تسجيل الخروج
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header" style="display: none;">
+        <h1>محفظة المستثمر</h1>
+        <div class="header-icon" id="refresh-icon">
+            <i class="fas fa-sync-alt"></i>
+        </div>
+    </header>
+
+    <!-- App Container -->
+    <div id="app" class="app-container" style="display: none;">
+        <!-- Home Page -->
+        <div id="home-page" class="page active">
+            <div class="balance-card">
+                <div class="balance-card-pattern"></div>
+                <div class="balance-card-header">
+                    <div>
+                        <div class="balance-label">رصيدك الاستثماري</div>
+                        <div id="total-balance" class="balance-amount">0 دينار</div>
+                    </div>
+                    <div class="header-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                </div>
+                <div class="balance-details">
+                    <div class="balance-detail">
+                        <div class="balance-detail-label">الأرباح المستحقة</div>
+                        <div id="pending-profits" class="balance-detail-value">0 دينار</div>
+                    </div>
+                    <div class="balance-detail">
+                        <div class="balance-detail-label">نسبة الربح</div>
+                        <div id="interest-rate" class="balance-detail-value">17.5%</div>
+                    </div>
+                    <div class="balance-detail">
+                        <div class="balance-detail-label">تاريخ الاستحقاق</div>
+                        <div id="due-date" class="balance-detail-value">--</div>
+                    </div>
+                    <div class="balance-detail">
+                        <div class="balance-detail-label">الربح الشهري</div>
+                        <div id="monthly-profit" class="balance-detail-value">0 دينار</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <a href="#" class="quick-action" id="show-deposit">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>إيداع</span>
+                </a>
+                <a href="#" class="quick-action" id="show-withdraw">
+                    <i class="fas fa-arrow-down"></i>
+                    <span>سحب</span>
+                </a>
+                <a href="#" class="quick-action" id="show-transactions">
+                    <i class="fas fa-history"></i>
+                    <span>العمليات</span>
+                </a>
+                <a href="#" class="quick-action" id="show-profits">
+                    <i class="fas fa-coins"></i>
+                    <span>الأرباح</span>
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-chart-line"></i>
+                        <span>تطور الاستثمار</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="investment-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>أحدث العمليات</span>
+                    </div>
+                    <div class="card-action" id="view-all-transactions">عرض الكل</div>
+                </div>
+                <div id="recent-transactions" class="transaction-list">
+                    <!-- سيتم ملؤها ديناميكياً -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions Page -->
+        <div id="transactions-page" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>جميع العمليات</span>
+                    </div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stats-card success">
+                        <div class="stats-label">إجمالي الإيداعات</div>
+                        <div id="total-deposits" class="stats-value">0 دينار</div>
+                    </div>
+                    <div class="stats-card warning">
+                        <div class="stats-label">إجمالي السحوبات</div>
+                        <div id="total-withdrawals" class="stats-value">0 دينار</div>
+                    </div>
+                </div>
+                <div id="all-transactions" class="transaction-list">
+                    <!-- سيتم ملؤها ديناميكياً -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Profits Page -->
+        <div id="profits-page" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-coins"></i>
+                        <span>الأرباح المستحقة</span>
+                    </div>
+                </div>
+                <div id="profits-details">
+                    <!-- سيتم ملؤها ديناميكياً -->
+                </div>
+                <div class="chart-container">
+                    <canvas id="profits-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div id="settings-page" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-user"></i>
+                        <span>معلومات المستثمر</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">الاسم</label>
+                    <input type="text" id="investor-name" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">رقم الهاتف</label>
+                    <input type="text" id="investor-phone" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">البريد الإلكتروني</label>
+                    <input type="text" id="investor-email" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">العنوان</label>
+                    <input type="text" id="investor-address" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">رقم البطاقة</label>
+                    <input type="text" id="investor-card" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">تاريخ الانضمام</label>
+                    <input type="text" id="investor-join-date" class="form-input" readonly>
+                </div>
+                <button id="logout-btn" class="btn btn-danger" style="margin-top: var(--spacing-6);">
+                    <i class="fas fa-sign-out-alt btn-icon"></i>
+                    تسجيل الخروج
+                </button>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-palette"></i>
+                        <span>مظهر التطبيق</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">وضع العرض</label>
+                    <select id="theme-selector" class="form-input">
+                        <option value="system">تلقائي (حسب النظام)</option>
+                        <option value="light">وضع النهار</option>
+                        <option value="dark">وضع الليل</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-info-circle"></i>
+                        <span>عن التطبيق</span>
+                    </div>
+                </div>
+                <div style="text-align: center; padding: var(--spacing-4) 0;">
+                    <img src="logo.png" alt="شعار التطبيق" style="width: 80px; height: 80px; border-radius: var(--radius-md); margin-bottom: var(--spacing-4); background: var(--color-gray-100);">
+                    <h3 style="margin-bottom: var(--spacing-2);">محفظة المستثمر</h3>
+                    <p style="color: var(--color-gray-500); margin-bottom: var(--spacing-4);">الإصدار 2.0.0</p>
+                    <p style="color: var(--color-gray-600); font-size: 0.9rem;">تطبيق لإدارة استثماراتك بكل سهولة وأمان</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" style="display: none;">
+        <div class="nav-item active" data-page="home">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </div>
+        <div class="nav-item" data-page="transactions">
+            <i class="fas fa-exchange-alt"></i>
+            <span>العمليات</span>
+        </div>
+        <div class="nav-item" data-page="profits">
+            <i class="fas fa-chart-line"></i>
+            <span>الأرباح</span>
+        </div>
+        <div class="nav-item" data-page="settings">
+            <i class="fas fa-user"></i>
+            <span>الإعدادات</span>
+        </div>
+    </nav>
+
+    <!-- Loading Spinner -->
+    <div id="spinner" class="spinner"></div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <div class="notification-icon">
+            <i class="fas fa-info-circle"></i>
+        </div>
+        <div id="notification-text"></div>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDGpAHia_wEmrhnmYjrPf1n1TrAzwEMiAI",
+            authDomain: "messageemeapp.firebaseapp.com",
+            databaseURL: "https://messageemeapp-default-rtdb.firebaseio.com",
+            projectId: "messageemeapp",
+            storageBucket: "messageemeapp.appspot.com",
+            messagingSenderId: "255034474844",
+            appId: "1:255034474844:web:5e3b7a6bc4b2fb94cc4199"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        // Global Variables
+        let currentUser = null;
+        let currentInvestor = null;
+        let transactions = [];
+        let settings = {
+            interestRate: 17.5,
+            currency: 'دينار'
+        };
+        let charts = {};
+
+        // Authentication Manager
+        const AuthManager = {
+            // تسجيل مستخدم جديد
+            async registerUser(name, email, password) {
+                try {
+                    showSpinner();
+                    
+                    // إنشاء المستخدم في Firebase Authentication
+                    const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+                    const user = userCredential.user;
+                    
+                    // إضافة اسم المستخدم في ملف التعريف
+                    await user.updateProfile({
+                        displayName: name
+                    });
+                    
+                    // تخزين بيانات المستخدم في قاعدة البيانات
+                    await firebase.database().ref(`appUsers/${user.uid}`).set({
+                        name: name,
+                        email: email,
+                        createdAt: new Date().toISOString()
+                    });
+                    
+                    currentUser = {
+                        uid: user.uid,
+                        email: user.email,
+                        name: name
+                    };
+                    
+                    hideSpinner();
+                    return true;
+                } catch (error) {
+                    hideSpinner();
+                    console.error("Error registering user:", error);
+                    
+                    let errorMessage = 'حدث خطأ أثناء إنشاء الحساب';
+                    
+                    if (error.code === 'auth/email-already-in-use') {
+                        errorMessage = 'البريد الإلكتروني مستخدم بالفعل';
+                    } else if (error.code === 'auth/invalid-email') {
+                        errorMessage = 'البريد الإلكتروني غير صالح';
+                    } else if (error.code === 'auth/weak-password') {
+                        errorMessage = 'كلمة المرور ضعيفة جداً';
+                    }
+                    
+                    throw new Error(errorMessage);
+                }
+            },
+            
+            // تسجيل الدخول
+            async loginUser(email, password) {
+                try {
+                    showSpinner();
+                    
+                    const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+                    const user = userCredential.user;
+                    
+                    // جلب بيانات المستخدم من قاعدة البيانات (إن وجدت)
+                    const userDataSnapshot = await firebase.database().ref(`appUsers/${user.uid}`).once('value');
+                    const userData = userDataSnapshot.val() || {};
+                    
+                    currentUser = {
+                        uid: user.uid,
+                        email: user.email,
+                        name: userData.name || user.displayName || 'مستخدم'
+                    };
+                    
+                    // حفظ حالة تسجيل الدخول
+                    localStorage.setItem('userEmail', email);
+                    
+                    hideSpinner();
+                    return true;
+                } catch (error) {
+                    hideSpinner();
+                    console.error("Error logging in:", error);
+                    
+                    let errorMessage = 'حدث خطأ أثناء تسجيل الدخول';
+                    
+                    if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                        errorMessage = 'البريد الإلكتروني أو كلمة المرور غير صحيحة';
+                    } else if (error.code === 'auth/invalid-email') {
+                        errorMessage = 'البريد الإلكتروني غير صالح';
+                    } else if (error.code === 'auth/too-many-requests') {
+                        errorMessage = 'تم تقييد الحساب بسبب كثرة المحاولات الفاشلة. حاول مرة أخرى لاحقاً';
+                    }
+                    
+                    throw new Error(errorMessage);
+                }
+            },
+            
+            // تسجيل الخروج
+            async logout() {
+                try {
+                    await firebase.auth().signOut();
+                    currentUser = null;
+                    currentInvestor = null;
+                    localStorage.removeItem('userEmail');
+                    localStorage.removeItem('investorData');
+                    return true;
+                } catch (error) {
+                    console.error("Error logging out:", error);
+                    throw new Error('حدث خطأ أثناء تسجيل الخروج');
+                }
+            },
+            
+            // التحقق من حالة المصادقة
+            getCurrentUser() {
+                return firebase.auth().currentUser;
+            }
+        };
+
+        // Investor Data Manager
+        const InvestorDataManager = {
+            currentInvestor: null,
+            dbRef: firebase.database(),
+            
+            async verifyInvestor(investorId, phoneNumber) {
+                try {
+                    showSpinner();
+                    
+                    // تنظيف رقم الهاتف
+                    const cleanPhone = phoneNumber.replace(/\s/g, '');
+                    
+                    // البحث عن بيانات المستثمر في جميع المستخدمين
+                    const usersSnapshot = await this.dbRef.ref('users').once('value');
+                    const users = usersSnapshot.val();
+                    
+                    let investorData = null;
+                    let foundUserId = null;
+                    let foundInvestorIndex = null;
+                    let settings = {
+                        interestRate: 17.5,
+                        currency: 'دينار'
+                    };
+                    
+                    // البحث في كل مستخدم في النظام
+                    for (const userId in users) {
+                        if (users[userId].investors && users[userId].investors.data) {
+                            // البحث في مصفوفة المستثمرين
+                            const investorsData = users[userId].investors.data;
+                            for (let i = 0; i < investorsData.length; i++) {
+                                const investor = investorsData[i];
+                                // البحث باستخدام رقم الهاتف والمعرف
+                                const investorCleanPhone = investor.phone ? investor.phone.replace(/\s/g, '') : '';
+                                
+                                if (investorCleanPhone === cleanPhone && investor.id === investorId) {
+                                    investorData = investor;
+                                    foundUserId = userId;
+                                    foundInvestorIndex = i;
+                                    
+                                    // جلب الإعدادات من نفس المستخدم
+                                    if (users[userId].settings && users[userId].settings.data) {
+                                        settings = users[userId].settings.data;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                        if (investorData) break;
+                    }
+                    
+                    if (!investorData) {
+                        throw new Error('لم يتم العثور على المستثمر بهذا المعرف أو رقم الهاتف');
+                    }
+                    
+                    // جلب جميع العمليات المرتبطة بالمستثمر
+                    let investorTransactions = [];
+                    if (users[foundUserId].transactions && users[foundUserId].transactions.data) {
+                        investorTransactions = users[foundUserId].transactions.data.filter(t => t.investorId === investorData.id);
+                    }
+                    
+                    // تحويل البيانات للشكل المطلوب
+                    this.currentInvestor = {
+                        id: investorData.id,
+                        name: investorData.name,
+                        phone: investorData.phone,
+                        joinDate: investorData.joinDate || investorData.createdAt,
+                        balance: investorData.amount || 0,
+                        profits: this.calculatePendingProfits(investorData),
+                        interestRate: settings.interestRate,
+                        dueDate: this.calculateDueDate(investorData),
+                        address: investorData.address,
+                        cardNumber: investorData.cardNumber,
+                        email: currentUser.email // إضافة بريد المستخدم المسجل دخوله
+                    };
+                    
+                    // تخزين بيانات المستثمر في التخزين المحلي
+                    localStorage.setItem('investorData', JSON.stringify({
+                        id: investorData.id,
+                        phone: cleanPhone
+                    }));
+                    
+                    // تخزين مسار البيانات للتحديثات في الوقت الحقيقي
+                    this.userPath = `users/${foundUserId}`;
+                    this.investorPath = `${this.userPath}/investors/data/${foundInvestorIndex}`;
+                    
+                    // تحويل العمليات للشكل المطلوب
+                    window.transactions = investorTransactions.map(t => ({
+                        id: t.id,
+                        type: this.getTransactionType(t.type),
+                        typeAr: t.type,
+                        amount: t.amount,
+                        date: t.date,
+                        description: t.notes || '',
+                        balanceAfter: t.balanceAfter
+                    })).sort((a, b) => new Date(b.date) - new Date(a.date)); // ترتيب العمليات تنازلياً حسب التاريخ
+                    
+                    // تحديث الإعدادات العامة
+                    window.settings = settings;
+                    
+                    // إعداد المستمعين للتحديثات في الوقت الحقيقي
+                    this.setupRealtimeListeners(investorData.id);
+                    
+                    hideSpinner();
+                    currentInvestor = this.currentInvestor;
+                    return currentInvestor;
+                } catch (error) {
+                    hideSpinner();
+                    console.error("Error verifying investor:", error);
+                    throw error;
+                }
+            },
+            
+            setupRealtimeListeners(investorId) {
+                // مستمع لتحديثات بيانات المستثمر
+                if (this.investorPath) {
+                    this.dbRef.ref(this.investorPath).on('value', snapshot => {
+                        const data = snapshot.val();
+                        if (data) {
+                            this.currentInvestor = {
+                                ...this.currentInvestor,
+                                name: data.name,
+                                phone: data.phone,
+                                balance: data.amount || 0,
+                                profits: this.calculatePendingProfits(data),
+                                address: data.address,
+                                cardNumber: data.cardNumber
+                            };
+                            currentInvestor = this.currentInvestor;
+                            updateUI();
+                        }
+                    });
+                }
+                
+                // مستمع لتحديثات العمليات
+                if (this.userPath) {
+                    this.dbRef.ref(`${this.userPath}/transactions/data`).on('value', snapshot => {
+                        const allTransactions = snapshot.val() || [];
+                        const investorTransactions = allTransactions.filter(t => t.investorId === investorId);
+                        
+                        window.transactions = investorTransactions.map(t => ({
+                            id: t.id,
+                            type: this.getTransactionType(t.type),
+                            typeAr: t.type,
+                            amount: t.amount,
+                            date: t.date,
+                            description: t.notes || '',
+                            balanceAfter: t.balanceAfter
+                        })).sort((a, b) => new Date(b.date) - new Date(a.date)); // ترتيب العمليات تنازلياً حسب التاريخ
+                        
+                        // تحديث واجهات العرض
+                        renderRecentTransactions();
+                        updateTransactionStats();
+                        if (document.getElementById('transactions-page').classList.contains('active')) {
+                            renderAllTransactions();
+                        }
+                        if (document.getElementById('profits-page').classList.contains('active')) {
+                            renderProfitsDetails();
+                        }
+                        
+                        // تحديث الرسوم البيانية
+                        updateCharts();
+                    });
+                }
+                
+                // مستمع لتحديثات الإعدادات
+                if (this.userPath) {
+                    this.dbRef.ref(`${this.userPath}/settings/data`).on('value', snapshot => {
+                        const settingsData = snapshot.val();
+                        if (settingsData) {
+                            window.settings = settingsData;
+                            // تحديث نسبة الفائدة في واجهة المستخدم
+                            this.currentInvestor.interestRate = settingsData.interestRate;
+                            currentInvestor = this.currentInvestor;
+                            updateUI();
+                        }
+                    });
+                }
+            },
+            
+            calculatePendingProfits(investor) {
+                // التحقق من وجود الاستثمارات
+                if (!investor || !investor.investments || investor.investments.length === 0) return 0;
+                
+                // استخدام قيمة افتراضية لنسبة الفائدة إذا لم تكن موجودة في الإعدادات
+                const interestRate = (window.settings && window.settings.interestRate) 
+                    ? (window.settings.interestRate / 100) 
+                    : 0.175; // قيمة افتراضية 17.5%
+                
+                const today = new Date();
+                let totalProfit = 0;
+                
+                // حساب الأرباح من الاستثمارات النشطة
+                investor.investments.forEach(inv => {
+                    // التحقق من وجود المبلغ وأنه أكبر من الصفر
+                    if (inv && inv.amount > 0 && inv.date) {
+                        try {
+                            const start = new Date(inv.date);
+                            const days = Math.floor((today - start) / (1000 * 60 * 60 * 24));
+                            const profit = (inv.amount * interestRate * days) / 365;
+                            totalProfit += profit;
+                        } catch (error) {
+                            console.error("خطأ في حساب الأرباح:", error);
+                            // تجاهل هذا الاستثمار إذا حدث خطأ
+                        }
+                    }
+                });
+                
+                // خصم الأرباح المدفوعة سابقاً إذا وجدت
+                if (investor.profits && investor.profits.length > 0) {
+                    const totalPaidProfits = investor.profits.reduce((sum, profit) => {
+                        return sum + (profit.amount || 0);
+                    }, 0);
+                    totalProfit -= totalPaidProfits;
+                }
+                
+                return Math.max(0, totalProfit); // لا نريد أرباح سالبة
+            },
+            
+            calculateDueDate(investor) {
+                if (!investor.investments || investor.investments.length === 0) return '--';
+                
+                // إذا كان هناك أرباح مدفوعة سابقاً، نحسب من تاريخ آخر دفعة
+                if (investor.profits && investor.profits.length > 0) {
+                    const lastProfitDate = new Date(investor.profits[investor.profits.length - 1].date);
+                    const nextDue = new Date(lastProfitDate);
+                    nextDue.setMonth(nextDue.getMonth() + 1);
+                    return formatDate(nextDue.toISOString().split('T')[0]);
+                }
+                
+                // إذا لم يكن هناك أرباح مدفوعة، نحسب من تاريخ أول استثمار
+                const firstInvestmentDate = new Date(investor.investments[0].date);
+                const nextDue = new Date(firstInvestmentDate);
+                nextDue.setMonth(nextDue.getMonth() + 1);
+                
+                return formatDate(nextDue.toISOString().split('T')[0]);
+            },
+            
+            getTransactionType(type) {
+                switch (type.toLowerCase()) {
+                    case 'إيداع':
+                        return 'deposit';
+                    case 'سحب':
+                        return 'withdrawal';
+                    case 'دفع أرباح':
+                        return 'profit';
+                    default:
+                        return 'unknown';
+                }
+            },
+            
+            clearListeners() {
+                if (this.currentInvestor && this.investorPath) {
+                    this.dbRef.ref(this.investorPath).off();
+                    this.dbRef.ref(`${this.userPath}/transactions/data`).off();
+                    this.dbRef.ref(`${this.userPath}/settings/data`).off();
+                }
+                
+                this.currentInvestor = null;
+                this.userPath = null;
+                this.investorPath = null;
+                window.transactions = [];
+            }
+        };
+
+        // App Initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            initApp();
+        });
+
+        function initApp() {
+            setupEventListeners();
+            setupThemeSelector();
+            checkAuthentication();
+        }
+
+        function setupEventListeners() {
+            // Switch between login and register forms
+            document.getElementById('show-register').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('register-form').style.display = 'block';
+            });
+            
+            document.getElementById('show-login').addEventListener('click', function(e) {
+                e.preventDefault();
+                document.getElementById('register-form').style.display = 'none';
+                document.getElementById('login-form').style.display = 'block';
+            });
+            
+            // Login
+            document.getElementById('login-btn').addEventListener('click', handleLogin);
+            document.getElementById('login-email').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') document.getElementById('login-password').focus();
+            });
+            document.getElementById('login-password').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') handleLogin();
+            });
+            
+            // Register
+            document.getElementById('register-btn').addEventListener('click', handleRegister);
+            
+            // Investor Verification
+            document.getElementById('verify-btn').addEventListener('click', handleInvestorVerification);
+            document.getElementById('investor-id-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') document.getElementById('investor-phone-input').focus();
+            });
+            document.getElementById('investor-phone-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') handleInvestorVerification();
+            });
+            
+            // Format phone number as user types
+            document.getElementById('investor-phone-input').addEventListener('input', function(e) {
+                // Remove non-digit characters
+                let value = e.target.value.replace(/\D/g, '');
+                
+                // Format the phone number
+                if (value.length > 0 && value[0] !== '0') {
+                    value = '0' + value;
+                }
+                
+                // Limit to 11 digits (standard Iraqi phone number length)
+                if (value.length > 11) {
+                    value = value.slice(0, 11);
+                }
+                
+                e.target.value = value;
+            });
+
+            // Logout
+            document.getElementById('logout-btn').addEventListener('click', handleLogout);
+            document.getElementById('logout-auth-btn').addEventListener('click', handleLogout);
+
+            // Navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    if (!currentInvestor) return;
+                    const pageId = this.dataset.page;
+                    showPage(pageId);
+                });
+            });
+
+            // Quick Actions
+            document.getElementById('show-transactions').addEventListener('click', function(e) {
+                e.preventDefault();
+                showPage('transactions');
+            });
+
+            document.getElementById('show-profits').addEventListener('click', function(e) {
+                e.preventDefault();
+                showPage('profits');
+            });
+            
+            // View all transactions
+            document.getElementById('view-all-transactions').addEventListener('click', function() {
+                showPage('transactions');
+            });
+
+            // Refresh Button
+            document.getElementById('refresh-icon').addEventListener('click', function() {
+                refreshData();
+            });
+            
+            // Theme Selector
+            document.getElementById('theme-selector').addEventListener('change', function() {
+                setTheme(this.value);
+            });
+        }
+
+        async function checkAuthentication() {
+            try {
+                // التحقق من وجود مستخدم مسجل دخوله مسبقاً
+                const authUser = firebase.auth().currentUser;
+                const savedEmail = localStorage.getItem('userEmail');
+                
+                if (authUser || savedEmail) {
+                    // إذا كان المستخدم مسجل الدخول، نتحقق من وجود بيانات مستثمر محفوظة
+                    const savedInvestorData = localStorage.getItem('investorData');
+                    
+                    if (savedEmail && !authUser) {
+                        // انتظار تحميل Firebase Auth
+                        await new Promise(resolve => {
+                            const checkAuth = setInterval(() => {
+                                const user = firebase.auth().currentUser;
+                                if (user) {
+                                    clearInterval(checkAuth);
+                                    resolve();
+                                }
+                            }, 100);
+                            
+                            // إنهاء الانتظار بعد 5 ثوانٍ على أي حال
+                            setTimeout(() => {
+                                clearInterval(checkAuth);
+                                resolve();
+                            }, 5000);
+                        });
+                    }
+                    
+                    // تحديث بيانات المستخدم الحالي
+                    const user = firebase.auth().currentUser;
+                    if (user) {
+                        const userDataSnapshot = await firebase.database().ref(`appUsers/${user.uid}`).once('value');
+                        const userData = userDataSnapshot.val() || {};
+                        
+                        currentUser = {
+                            uid: user.uid,
+                            email: user.email,
+                            name: userData.name || user.displayName || 'مستخدم'
+                        };
+                        
+                        if (savedInvestorData) {
+                            // إذا كانت هناك بيانات مستثمر محفوظة، نحاول تسجيل الدخول مباشرة
+                            const investorData = JSON.parse(savedInvestorData);
+                            try {
+                                await InvestorDataManager.verifyInvestor(investorData.id, investorData.phone);
+                                showApp();
+                                updateUI();
+                                initializeCharts();
+                                showNotification(`مرحباً ${currentInvestor.name}`, 'success');
+                            } catch (error) {
+                                // إذا فشل تحقق المستثمر، نعرض شاشة التحقق
+                                showInvestorVerifyScreen();
+                            }
+                        } else {
+                            // إذا لم تكن هناك بيانات مستثمر محفوظة، نعرض شاشة التحقق
+                            showInvestorVerifyScreen();
+                        }
+                    } else {
+                        // إذا لم يكن هناك مستخدم مسجل الدخول، نعرض شاشة تسجيل الدخول
+                        showAuthScreen();
+                    }
+                } else {
+                    // لا يوجد مستخدم مسجل دخوله، نعرض شاشة تسجيل الدخول
+                    showAuthScreen();
+                }
+            } catch (error) {
+                console.error("Error checking authentication:", error);
+                showAuthScreen();
+            }
+        }
+
+        function showAuthScreen() {
+            document.getElementById('auth-screen').style.display = 'flex';
+            document.getElementById('investor-verify-screen').style.display = 'none';
+            document.getElementById('app').style.display = 'none';
+            document.querySelector('.header').style.display = 'none';
+            document.querySelector('.bottom-nav').style.display = 'none';
+            
+            // إظهار نموذج تسجيل الدخول وإخفاء نموذج التسجيل
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('register-form').style.display = 'none';
+        }
+
+        function showInvestorVerifyScreen() {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('investor-verify-screen').style.display = 'flex';
+            document.getElementById('app').style.display = 'none';
+            document.querySelector('.header').style.display = 'none';
+            document.querySelector('.bottom-nav').style.display = 'none';
+        }
+
+        function showApp() {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('investor-verify-screen').style.display = 'none';
+            document.getElementById('app').style.display = 'block';
+            document.querySelector('.header').style.display = 'flex';
+            document.querySelector('.bottom-nav').style.display = 'flex';
+        }
+
+        async function handleLogin() {
+            clearErrors();
+            
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            
+            // التحقق من الإدخالات
+            let hasError = false;
+            
+            if (!email) {
+                showFieldError('login-email', 'الرجاء إدخال البريد الإلكتروني');
+                hasError = true;
+            } else if (!isValidEmail(email)) {
+                showFieldError('login-email', 'البريد الإلكتروني غير صالح');
+                hasError = true;
+            }
+            
+            if (!password) {
+                showFieldError('login-password', 'الرجاء إدخال كلمة المرور');
+                hasError = true;
+            }
+            
+            if (hasError) return;
+            
+            try {
+                // محاولة تسجيل الدخول
+                await AuthManager.loginUser(email, password);
+                
+                // نجاح تسجيل الدخول، عرض شاشة التحقق من المستثمر
+                showInvestorVerifyScreen();
+                showNotification('تم تسجيل الدخول بنجاح، الرجاء إدخال بيانات المستثمر', 'success');
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        async function handleRegister() {
+            clearErrors();
+            
+            const name = document.getElementById('register-name').value.trim();
+            const email = document.getElementById('register-email').value.trim();
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-confirm-password').value;
+            
+            // التحقق من الإدخالات
+            let hasError = false;
+            
+            if (!name) {
+                showFieldError('register-name', 'الرجاء إدخال الاسم');
+                hasError = true;
+            }
+            
+            if (!email) {
+                showFieldError('register-email', 'الرجاء إدخال البريد الإلكتروني');
+                hasError = true;
+            } else if (!isValidEmail(email)) {
+                showFieldError('register-email', 'البريد الإلكتروني غير صالح');
+                hasError = true;
+            }
+            
+            if (!password) {
+                showFieldError('register-password', 'الرجاء إدخال كلمة المرور');
+                hasError = true;
+            } else if (password.length < 6) {
+                showFieldError('register-password', 'كلمة المرور يجب أن تكون 6 أحرف على الأقل');
+                hasError = true;
+            }
+            
+            if (!confirmPassword) {
+                showFieldError('register-confirm-password', 'الرجاء تأكيد كلمة المرور');
+                hasError = true;
+            } else if (password !== confirmPassword) {
+                showFieldError('register-confirm-password', 'كلمتا المرور غير متطابقتين');
+                hasError = true;
+            }
+            
+            if (hasError) return;
+            
+            try {
+                // محاولة تسجيل المستخدم
+                await AuthManager.registerUser(name, email, password);
+                
+                // نجاح التسجيل، عرض شاشة التحقق من المستثمر
+                showInvestorVerifyScreen();
+                showNotification('تم إنشاء الحساب بنجاح، الرجاء إدخال بيانات المستثمر', 'success');
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        async function handleInvestorVerification() {
+            clearErrors();
+            
+            const investorId = document.getElementById('investor-id-input').value.trim();
+            const phoneNumber = document.getElementById('investor-phone-input').value.trim();
+            
+            // التحقق من الإدخالات
+            let hasError = false;
+            
+            if (!investorId) {
+                showFieldError('investor-id', 'الرجاء إدخال معرف المستثمر');
+                hasError = true;
+            }
+            
+            if (!phoneNumber) {
+                showFieldError('investor-phone', 'الرجاء إدخال رقم الهاتف');
+                hasError = true;
+            } else if (!/^0\d{10}$/.test(phoneNumber)) {
+                showFieldError('investor-phone', 'يرجى إدخال رقم هاتف صحيح (11 رقم يبدأ بـ 0)');
+                hasError = true;
+            }
+            
+            if (hasError) return;
+            
+            try {
+                // محاولة التحقق من بيانات المستثمر
+                await InvestorDataManager.verifyInvestor(investorId, phoneNumber);
+                
+                // نجاح التحقق، عرض واجهة التطبيق
+                showApp();
+                updateUI();
+                initializeCharts();
+                showNotification(`مرحباً ${currentInvestor.name}`, 'success');
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        async function handleLogout() {
+            try {
+                // تنظيف مستمعي قاعدة البيانات
+                InvestorDataManager.clearListeners();
+                
+                // تسجيل الخروج من Firebase
+                await AuthManager.logout();
+                
+                // تنظيف الرسوم البيانية
+                destroyCharts();
+                
+                // العودة إلى شاشة تسجيل الدخول
+                showAuthScreen();
+                showNotification('تم تسجيل الخروج بنجاح', 'info');
+            } catch (error) {
+                showNotification(error.message, 'error');
+            }
+        }
+
+        function updateUI() {
+            if (!currentInvestor) return;
+
+            // تحديث بطاقة الرصيد
+            document.getElementById('total-balance').textContent = formatCurrency(currentInvestor.balance);
+            document.getElementById('pending-profits').textContent = formatCurrency(currentInvestor.profits);
+            document.getElementById('interest-rate').textContent = `${currentInvestor.interestRate}%`;
+            document.getElementById('due-date').textContent = currentInvestor.dueDate;
+
+            // حساب الربح الشهري
+            const monthlyProfit = (currentInvestor.balance * (currentInvestor.interestRate / 100)) / 12;
+            document.getElementById('monthly-profit').textContent = formatCurrency(monthlyProfit);
+
+            // تحديث العمليات الأخيرة
+            renderRecentTransactions();
+            
+            // تحديث إحصائيات العمليات
+            updateTransactionStats();
+
+            // تحديث صفحة الإعدادات
+            document.getElementById('investor-name').value = currentInvestor.name;
+            document.getElementById('investor-phone').value = currentInvestor.phone;
+            document.getElementById('investor-email').value = currentInvestor.email || '';
+            document.getElementById('investor-address').value = currentInvestor.address || '';
+            document.getElementById('investor-card').value = currentInvestor.cardNumber || '';
+            document.getElementById('investor-join-date').value = formatDate(currentInvestor.joinDate);
+            
+            // تحديث الرسوم البيانية إذا كانت موجودة
+            updateCharts();
+        }
+
+        // تحديث إحصائيات العمليات
+        function updateTransactionStats() {
+            if (!transactions || transactions.length === 0) return;
+            
+            let totalDeposits = 0;
+            let totalWithdrawals = 0;
+            
+            transactions.forEach(t => {
+                if (t.type === 'deposit') {
+                    totalDeposits += t.amount;
+                } else if (t.type === 'withdrawal') {
+                    totalWithdrawals += t.amount;
+                }
+            });
+            
+            // تحديث العناصر في الواجهة
+            document.getElementById('total-deposits').textContent = formatCurrency(totalDeposits);
+            document.getElementById('total-withdrawals').textContent = formatCurrency(totalWithdrawals);
+        }
+
+        // عرض العمليات الأخيرة
+function renderRecentTransactions() {
+    const container = document.getElementById('recent-transactions');
+    const recentTransactions = transactions.slice(0, 3);
+    
+    if (recentTransactions.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-exchange-alt"></i>
+                </div>
+                <div class="empty-state-title">لا توجد معاملات حديثة</div>
+                <div class="empty-state-message">ستظهر هنا آخر المعاملات التي تمت على حسابك الاستثماري</div>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = recentTransactions.map(transaction => `
+        <div class="transaction-item">
+            <div class="transaction-icon ${transaction.type}">
+                <i class="fas ${getTransactionIcon(transaction.type)}"></i>
+            </div>
+            <div class="transaction-details">
+                <div class="transaction-title">${transaction.typeAr}</div>
+                <div class="transaction-date">${formatDate(transaction.date)}</div>
+                ${transaction.description ? `<div style="font-size: 0.8rem; color: var(--text-muted);">${transaction.description}</div>` : ''}
+            </div>
+            <div class="transaction-amount ${transaction.type === 'withdrawal' ? 'negative' : 'positive'}">
+                ${transaction.type === 'withdrawal' ? '-' : '+'} ${formatCurrency(transaction.amount)}
+            </div>
+        </div>
+    `).join('');
+}
+
+// عرض جميع العمليات
+function renderAllTransactions() {
+    const container = document.getElementById('all-transactions');
+    
+    if (transactions.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-exchange-alt"></i>
+                </div>
+                <div class="empty-state-title">لا توجد معاملات</div>
+                <div class="empty-state-message">ستظهر هنا جميع المعاملات التي تتم على حسابك الاستثماري</div>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = transactions.map(transaction => `
+        <div class="transaction-item">
+            <div class="transaction-icon ${transaction.type}">
+                <i class="fas ${getTransactionIcon(transaction.type)}"></i>
+            </div>
+            <div class="transaction-details">
+                <div class="transaction-title">${transaction.typeAr}</div>
+                <div class="transaction-date">${formatDate(transaction.date)}</div>
+                ${transaction.description ? `<div style="font-size: 0.8rem; color: var(--text-muted);">${transaction.description}</div>` : ''}
+            </div>
+            <div class="transaction-amount ${transaction.type === 'withdrawal' ? 'negative' : 'positive'}">
+                ${transaction.type === 'withdrawal' ? '-' : '+'} ${formatCurrency(transaction.amount)}
+            </div>
+        </div>
+    `).join('');
+}
+
+// عرض تفاصيل الأرباح
+function renderProfitsDetails() {
+    const container = document.getElementById('profits-details');
+    
+    if (!currentInvestor) return;
+    
+    try {
+        const profitTransactions = transactions.filter(t => t.type === 'profit');
+        const monthlyProfit = (currentInvestor.balance * (currentInvestor.interestRate / 100)) / 12;
+        const dailyProfit = monthlyProfit / 30;
+        const pendingProfit = currentInvestor.profits;
+        const totalPaidProfits = profitTransactions.reduce((sum, transaction) => sum + transaction.amount, 0);
+        const daysInvested = Math.floor((new Date() - new Date(currentInvestor.joinDate)) / (1000 * 60 * 60 * 24));
+
+        container.innerHTML = `
+            <div class="profit-summary">
+                <h3 style="margin-bottom: var(--spacing-2); font-size: 1.2rem;">الأرباح المستحقة</h3>
+                <div style="font-size: 1.8rem; font-weight: bold; color: var(--color-success);">
+                    ${formatCurrency(pendingProfit)}
+                </div>
+            </div>
+
+            <div class="profit-details">
+                <div class="profit-details-item">
+                    <div class="profit-details-label">المبلغ المستثمر</div>
+                    <div class="profit-details-value">${formatCurrency(currentInvestor.balance)}</div>
+                </div>
+                <div class="profit-details-item">
+                    <div class="profit-details-label">نسبة الربح السنوي</div>
+                    <div class="profit-details-value">${currentInvestor.interestRate}%</div>
+                </div>
+                <div class="profit-details-item">
+                    <div class="profit-details-label">الربح الشهري</div>
+                    <div class="profit-details-value" style="color: var(--color-success);">${formatCurrency(monthlyProfit)}</div>
+                </div>
+                <div class="profit-details-item">
+                    <div class="profit-details-label">الربح اليومي</div>
+                    <div class="profit-details-value">${formatCurrency(dailyProfit)}</div>
+                </div>
+                <div class="profit-details-item">
+                    <div class="profit-details-label">عدد أيام الاستثمار</div>
+                    <div class="profit-details-value">${daysInvested} يوم</div>
+                </div>
+                <div class="profit-details-item">
+                    <div class="profit-details-label">تاريخ الاستحقاق القادم</div>
+                    <div class="profit-details-value">${currentInvestor.dueDate}</div>
+                </div>
+                <div class="profit-details-item">
+                    <div class="profit-details-label">إجمالي الأرباح المدفوعة</div>
+                    <div class="profit-details-value">${formatCurrency(totalPaidProfits)}</div>
+                </div>
+            </div>
+
+            <div class="profit-note">
+                <i class="fas fa-info-circle"></i>
+                <div>يتم احتساب الأرباح بشكل يومي اعتمادًا على رصيد حسابك ونسبة الربح المتفق عليها. يتم دفع الأرباح في نهاية كل شهر استثماري.</div>
+            </div>
+        `;
+        
+        // عرض معاملات الأرباح إذا كانت موجودة
+        if (profitTransactions.length > 0) {
+            const profitHistoryHTML = `
+                <h3 style="margin: var(--spacing-6) 0 var(--spacing-3) 0; font-size: 1.2rem;">سجل دفعات الأرباح</h3>
+                <div class="transaction-list">
+                    ${profitTransactions.map(transaction => `
+                        <div class="transaction-item">
+                            <div class="transaction-icon profit">
+                                <i class="fas fa-hand-holding-usd"></i>
+                            </div>
+                            <div class="transaction-details">
+                                <div class="transaction-title">دفع أرباح</div>
+                                <div class="transaction-date">${formatDate(transaction.date)}</div>
+                                ${transaction.description ? `<div style="font-size: 0.8rem; color: var(--text-muted);">${transaction.description}</div>` : ''}
+                            </div>
+                            <div class="transaction-amount positive">
+                                + ${formatCurrency(transaction.amount)}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            container.innerHTML += profitHistoryHTML;
+        }
+    } catch (error) {
+        console.error("Error rendering profits details:", error);
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <div class="empty-state-title">حدث خطأ</div>
+                <div class="empty-state-message">حدث خطأ أثناء تحميل بيانات الأرباح، يرجى المحاولة مرة أخرى</div>
+            </div>
+        `;
+    }
+}
+
+// التنقل بين الصفحات
+function showPage(pageId) {
+    // إخفاء جميع الصفحات
+    document.querySelectorAll('.page').forEach(page => {
+        page.classList.remove('active');
+    });
+
+    // إظهار الصفحة المطلوبة
+    document.getElementById(`${pageId}-page`).classList.add('active');
+
+    // تحديث التنقل السفلي
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.dataset.page === pageId) {
+            item.classList.add('active');
+        }
+    });
+
+    // تحديث المحتوى حسب الصفحة
+    if (pageId === 'transactions') {
+        renderAllTransactions();
+    } else if (pageId === 'profits') {
+        renderProfitsDetails();
+    }
+}
+
+// أيقونات العمليات
+function getTransactionIcon(type) {
+    switch (type) {
+        case 'deposit':
+            return 'fa-arrow-up';
+        case 'withdrawal':
+            return 'fa-arrow-down';
+        case 'profit':
+            return 'fa-hand-holding-usd';
+        default:
+            return 'fa-exchange-alt';
+    }
+}
+
+// تنسيق العملة
+function formatCurrency(amount) {
+    return `${Number(amount).toLocaleString()} ${settings.currency || 'دينار'}`;
+}
+
+// تنسيق التاريخ
+function formatDate(dateString) {
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    // استخدام التقويم الميلادي بدلاً من الهجري
+    return new Date(dateString).toLocaleDateString('ar-EG', options);
+}
+
+// إدارة الرسوم البيانية
+function initializeCharts() {
+    // تهيئة الرسم البياني للاستثمار
+    const investmentCtx = document.getElementById('investment-chart').getContext('2d');
+    charts.investment = new Chart(investmentCtx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'رصيد الاستثمار',
+                    data: [],
+                    borderColor: '#6366f1',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    rtl: true,
+                    titleAlign: 'right',
+                    bodyAlign: 'right',
+                    callbacks: {
+                        label: function(context) {
+                            return `الرصيد: ${formatCurrency(context.raw)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        font: {
+                            family: 'Tajawal'
+                        }
+                    },
+                    grid: {
+                        display: false
+                    }
+                },
+                y: {
+                    ticks: {
+                        font: {
+                            family: 'Tajawal'
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                }
+            }
+        }
+    });
+    
+    // تهيئة الرسم البياني للأرباح
+    const profitsCtx = document.getElementById('profits-chart').getContext('2d');
+    charts.profits = new Chart(profitsCtx, {
+        type: 'bar',
+        data: {
+            labels: [],
+            datasets: [
+                {
+                    label: 'الأرباح المدفوعة',
+                    data: [],
+                    backgroundColor: '#10b981',
+                    borderRadius: 4
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    rtl: true,
+                    titleAlign: 'right',
+                    bodyAlign: 'right',
+                    callbacks: {
+                        label: function(context) {
+                            return `الربح: ${formatCurrency(context.raw)}`;
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        font: {
+                            family: 'Tajawal'
+                        }
+                    },
+                    grid: {
+                        display: false
+                    }
+                },
+                y: {
+                    ticks: {
+                        font: {
+                            family: 'Tajawal'
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                }
+            }
+        }
+    });
+    
+    // تحديث البيانات الأولية
+    updateCharts();
+}
+
+// تحديث بيانات الرسوم البيانية
+function updateCharts() {
+    if (!charts.investment || !charts.profits || !transactions || transactions.length === 0) return;
+    
+    // إعداد بيانات الرسم البياني للاستثمار
+    const investmentData = prepareInvestmentChartData();
+    charts.investment.data.labels = investmentData.labels;
+    charts.investment.data.datasets[0].data = investmentData.values;
+    charts.investment.update();
+    
+    // إعداد بيانات الرسم البياني للأرباح
+    const profitsData = prepareProfitsChartData();
+    charts.profits.data.labels = profitsData.labels;
+    charts.profits.data.datasets[0].data = profitsData.values;
+    charts.profits.update();
+}
+
+// إعداد بيانات الرسم البياني للاستثمار
+function prepareInvestmentChartData() {
+    // ترتيب العمليات حسب التاريخ (تصاعدياً)
+    const sortedTransactions = [...transactions].sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    const labels = [];
+    const values = [];
+    let currentBalance = 0;
+    
+    // الحد الأقصى لعدد النقاط في الرسم البياني
+    const maxDataPoints = 6;
+    
+    // استخدام العمليات لبناء مخطط تطور الرصيد
+    sortedTransactions.forEach(transaction => {
+        currentBalance = transaction.balanceAfter || 0;
+        const date = new Date(transaction.date);
+        const formattedDate = `${date.getDate()}/${date.getMonth() + 1}`;
+        
+        labels.push(formattedDate);
+        values.push(currentBalance);
+    });
+    
+    // إذا كان هناك الكثير من النقاط، نختار عينة منها
+    if (labels.length > maxDataPoints) {
+        const step = Math.floor(labels.length / maxDataPoints);
+        const newLabels = [];
+        const newValues = [];
+        
+        for (let i = 0; i < labels.length; i += step) {
+            newLabels.push(labels[i]);
+            newValues.push(values[i]);
+        }
+        
+        // إضافة آخر نقطة دائمًا
+        if (newLabels[newLabels.length - 1] !== labels[labels.length - 1]) {
+            newLabels.push(labels[labels.length - 1]);
+            newValues.push(values[values.length - 1]);
+        }
+        
+        return { labels: newLabels, values: newValues };
+    }
+    
+    return { labels, values };
+}
+
+// إعداد بيانات الرسم البياني للأرباح
+function prepareProfitsChartData() {
+    // استخراج معاملات الأرباح فقط
+    const profitTransactions = transactions.filter(t => t.type === 'profit');
+    
+    // ترتيب حسب التاريخ (تصاعدياً)
+    profitTransactions.sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    const labels = [];
+    const values = [];
+    
+    // إذا لم تكن هناك معاملات أرباح، نعرض بيانات فارغة
+    if (profitTransactions.length === 0) {
+        // بيانات الأشهر الستة الماضية
+        const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+        const currentMonth = new Date().getMonth();
+        
+        // إضافة الأشهر الماضية كعينة
+        for (let i = 5; i >= 0; i--) {
+            const monthIndex = (currentMonth - i + 12) % 12;
+            labels.push(months[monthIndex]);
+            
+            // نضيف قيمة صفر للأشهر التي لا توجد بها أرباح
+            values.push(0);
+        }
+    } else {
+        // إنشاء مجموعة للأرباح حسب الشهر
+        const profitsByMonth = {};
+        const months = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+        
+        profitTransactions.forEach(transaction => {
+            const date = new Date(transaction.date);
+            const monthIndex = date.getMonth();
+            const monthName = months[monthIndex];
+            
+            if (!profitsByMonth[monthName]) {
+                profitsByMonth[monthName] = 0;
+            }
+            
+            profitsByMonth[monthName] += transaction.amount;
+        });
+        
+        // تحويل البيانات إلى مصفوفات للرسم البياني
+        for (const month in profitsByMonth) {
+            labels.push(month);
+            values.push(profitsByMonth[month]);
+        }
+    }
+    
+    return { labels, values };
+}
+
+// تدمير الرسوم البيانية عند تسجيل الخروج
+function destroyCharts() {
+    if (charts.investment) {
+        charts.investment.destroy();
+        charts.investment = null;
+    }
+    
+    if (charts.profits) {
+        charts.profits.destroy();
+        charts.profits = null;
+    }
+}
+
+// تحديث البيانات من السيرفر
+async function refreshData() {
+    try {
+        showSpinner();
+        
+        if (!currentInvestor) {
+            showNotification('يرجى تسجيل الدخول أولاً', 'warning');
+            hideSpinner();
+            return;
+        }
+        
+        // استرجاع بيانات المستثمر مرة أخرى
+        const savedInvestorData = localStorage.getItem('investorData');
+        if (savedInvestorData) {
+            const investorData = JSON.parse(savedInvestorData);
+            await InvestorDataManager.verifyInvestor(investorData.id, investorData.phone);
+            
+            updateUI();
+            updateCharts();
+            showNotification('تم تحديث البيانات بنجاح', 'success');
+        } else {
+            throw new Error('لم يتم العثور على بيانات المستثمر');
+        }
+        
+        hideSpinner();
+    } catch (error) {
+        hideSpinner();
+        console.error("Error refreshing data:", error);
+        showNotification(error.message || 'فشل تحديث البيانات', 'error');
+    }
+}
+
+// إعداد محدد السمة (وضع الألوان)
+function setupThemeSelector() {
+    const selector = document.getElementById('theme-selector');
+    
+    // تحديد السمة المخزنة أو استخدام سمة النظام
+    const savedTheme = localStorage.getItem('theme') || 'system';
+    selector.value = savedTheme;
+    
+    // تطبيق السمة عند التحميل
+    setTheme(savedTheme);
+}
+
+// تعيين سمة التطبيق
+function setTheme(theme) {
+    // تخزين تفضيل المستخدم
+    localStorage.setItem('theme', theme);
+    
+    const root = document.documentElement;
+    
+    if (theme === 'system') {
+        // إزالة السمات المخصصة والسماح بالاعتماد على تفضيل النظام
+        root.classList.remove('theme-light', 'theme-dark');
+    } else if (theme === 'light') {
+        // تطبيق الوضع الفاتح
+        root.classList.remove('theme-dark');
+        root.classList.add('theme-light');
+    } else if (theme === 'dark') {
+        // تطبيق الوضع الداكن
+        root.classList.remove('theme-light');
+        root.classList.add('theme-dark');
+    }
+}
+
+function showSpinner() {
+    document.getElementById('spinner').classList.add('active');
+}
+
+function hideSpinner() {
+    document.getElementById('spinner').classList.remove('active');
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.getElementById('notification');
+    const notificationText = document.getElementById('notification-text');
+    const notificationIcon = notification.querySelector('.notification-icon i');
+    
+    // تعيين نص الإشعار
+    notificationText.textContent = message;
+    
+    // تحديث أيقونة الإشعار حسب النوع
+    if (type === 'success') {
+        notificationIcon.className = 'fas fa-check-circle';
+    } else if (type === 'error') {
+        notificationIcon.className = 'fas fa-times-circle';
+    } else if (type === 'warning') {
+        notificationIcon.className = 'fas fa-exclamation-triangle';
+    } else {
+        notificationIcon.className = 'fas fa-info-circle';
+    }
+    
+    // تطبيق تصنيف الإشعار
+    notification.className = `notification ${type} show`;
+
+    // إخفاء الإشعار بعد 3 ثوانٍ
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, 3000);
+}
+
+// Validation Functions
+function isValidEmail(email) {
+    const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    return re.test(String(email).toLowerCase());
+}
+
+function clearErrors() {
+    // مسح رسائل الخطأ
+    document.querySelectorAll('.form-error').forEach(element => {
+        element.textContent = '';
+    });
+    
+    // إزالة تنسيق الخطأ من الحقول
+    document.querySelectorAll('.form-input').forEach(element => {
+        element.classList.remove('error');
+    });
+}
+
+function showFieldError(fieldId, message) {
+    const errorElement = document.getElementById(`${fieldId}-error`);
+    const inputElement = document.getElementById(fieldId);
+    
+    if (errorElement) {
+        errorElement.textContent = message;
+    }
+    
+    if (inputElement) {
+        inputElement.classList.add('error');
+    }
+}
+
+// PWA Support
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(registration => {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            })
+            .catch(err => {
+                console.error('ServiceWorker registration failed: ', err);
+            });
+    });
+}
+
+// Install Prompt
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    
+    // إنشاء زر تثبيت التطبيق
+    const installButton = document.createElement('button');
+    installButton.textContent = 'تثبيت التطبيق';
+    installButton.className = 'btn btn-primary';
+    installButton.style.position = 'fixed';
+    installButton.style.bottom = '80px';
+    installButton.style.left = '50%';
+    installButton.style.transform = 'translateX(-50%)';
+    installButton.style.zIndex = '1000';
+    installButton.style.width = 'auto';
+    installButton.style.borderRadius = '30px';
+    installButton.style.padding = '10px 20px';
+    installButton.style.boxShadow = 'var(--shadow-lg)';
+    
+    installButton.addEventListener('click', () => {
+        installButton.style.display = 'none';
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+                console.log('User accepted the install prompt');
+                showNotification('تم تثبيت التطبيق بنجاح', 'success');
+            }
+            deferredPrompt = null;
+        });
+    });
+    
+    document.body.appendChild(installButton);
+});
+
+// Handle Network Changes
+window.addEventListener('online', () => {
+    showNotification('تم استعادة الاتصال بالإنترنت', 'success');
+    if (currentInvestor) {
+        refreshData();
+    }
+});
+
+window.addEventListener('offline', () => {
+    showNotification('تم فقد الاتصال بالإنترنت', 'warning');
+});
+
+// Service Worker for PWA
+// يمكن إنشاء ملف service-worker.js منفصل لتمكين وضع عدم الاتصال والتخزين المؤقت
+const serviceWorkerContent = `
+// اسم ذاكرة التخزين المؤقت
+const CACHE_NAME = 'investor-portfolio-cache-v1';
+
+// قائمة الملفات التي سيتم تخزينها مؤقتًا
+const urlsToCache = [
+  '/',
+  '/index.html',
+  '/styles.css',
+  '/app.js',
+  '/manifest.json',
+  '/logo.png',
+  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
+  'https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap',
+  'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js'
+];
+
+// تثبيت Service Worker وتخزين الملفات
+self.addEventListener('install', event => {
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then(cache => {
+        console.log('Opened cache');
+        return cache.addAll(urlsToCache);
+      })
+  );
+});
+
+// استراتيجية "الشبكة أولاً، ثم التخزين المؤقت"
+self.addEventListener('fetch', event => {
+  event.respondWith(
+    fetch(event.request)
+      .then(response => {
+        // إذا نجح الطلب، نخزن نسخة في ذاكرة التخزين المؤقت
+        if (event.request.method === 'GET') {
+          const responseToCache = response.clone();
+          caches.open(CACHE_NAME)
+            .then(cache => {
+              cache.put(event.request, responseToCache);
+            });
+        }
+        return response;
+      })
+      .catch(() => {
+        // إذا فشل الطلب، نستخدم النسخة المخزنة مؤقتًا
+        return caches.match(event.request);
+      })
+  );
+});
+
+// حذف ذاكرات التخزين المؤقت القديمة
+self.addEventListener('activate', event => {
+  const cacheWhitelist = [CACHE_NAME];
+
+  event.waitUntil(
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cacheName => {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+});
+
+// إرسال رسائل للتطبيق
+self.addEventListener('message', event => {
+  if (event.data && event.data.action === 'skipWaiting') {
+    self.skipWaiting();
+  }
+});
+
+// إدارة تحديثات الخدمة
+self.addEventListener('sync', event => {
+  if (event.tag === 'sync-transactions') {
+    event.waitUntil(syncTransactions());
+  }
+});
+
+// مزامنة المعاملات المخزنة محليًا عند استعادة الاتصال
+async function syncTransactions() {
+  try {
+    const pendingTransactions = await getLocalTransactions();
+    
+    if (pendingTransactions && pendingTransactions.length > 0) {
+      // هنا يمكن إضافة كود لإرسال المعاملات المعلقة إلى الخادم
+      // عندما يكون الاتصال متاحًا مرة أخرى
+      
+      // مسح المعاملات المعلقة بعد نجاح المزامنة
+      await clearLocalTransactions();
+      
+      // إرسال رسالة تفيد بنجاح المزامنة
+      self.clients.matchAll().then(clients => {
+        clients.forEach(client => {
+          client.postMessage({
+            type: 'SYNC_COMPLETE',
+            message: 'تمت مزامنة البيانات بنجاح'
+          });
+        });
+      });
+    }
+  } catch (error) {
+    console.error('Error syncing transactions:', error);
+  }
+}
+
+// الحصول على المعاملات المخزنة محليًا
+async function getLocalTransactions() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('InvestorPortfolioDB', 1);
+    
+    request.onerror = event => {
+      reject('Error opening database');
+    };
+    
+    request.onsuccess = event => {
+      const db = event.target.result;
+      try {
+        const transaction = db.transaction(['pendingTransactions'], 'readonly');
+        const store = transaction.objectStore('pendingTransactions');
+        
+        const getAllRequest = store.getAll();
+        
+        getAllRequest.onsuccess = () => {
+          resolve(getAllRequest.result);
+        };
+        
+        getAllRequest.onerror = () => {
+          reject('Error getting pending transactions');
+        };
+      } catch (error) {
+        reject(error);
+      }
+    };
+  });
+}
+
+// مسح المعاملات المخزنة محليًا
+async function clearLocalTransactions() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('InvestorPortfolioDB', 1);
+    
+    request.onerror = event => {
+      reject('Error opening database');
+    };
+    
+    request.onsuccess = event => {
+      const db = event.target.result;
+      try {
+        const transaction = db.transaction(['pendingTransactions'], 'readwrite');
+        const store = transaction.objectStore('pendingTransactions');
+        
+        const clearRequest = store.clear();
+        
+        clearRequest.onsuccess = () => {
+          resolve();
+        };
+        
+        clearRequest.onerror = () => {
+          reject('Error clearing pending transactions');
+        };
+      } catch (error) {
+        reject(error);
+      }
+    };
+  });
+}
+
+// التعامل مع إشعارات Push
+self.addEventListener('push', event => {
+  if (event.data) {
+    const data = event.data.json();
+    
+    const options = {
+      body: data.body || 'تم استلام إشعار جديد',
+      icon: '/logo.png',
+      badge: '/logo.png',
+      data: {
+        url: data.url || '/'
+      },
+      dir: 'rtl',
+      vibrate: [100, 50, 100],
+      actions: [
+        {
+          action: 'open',
+          title: 'عرض'
+        },
+        {
+          action: 'close',
+          title: 'إغلاق'
+        }
+      ]
+    };
+    
+    event.waitUntil(
+      self.registration.showNotification(data.title || 'محفظة المستثمر', options)
+    );
+  }
+});
+
+// التعامل مع النقر على الإشعارات
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  
+  if (event.action === 'close') {
+    return;
+  }
+  
+  const url = event.notification.data.url || '/';
+  
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then(windowClients => {
+      // إذا كان التطبيق مفتوحًا بالفعل، نركز عليه
+      for (const client of windowClients) {
+        if (client.url === url && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      
+      // وإلا، نفتح نافذة جديدة
+      if (clients.openWindow) {
+        return clients.openWindow(url);
+      }
+    })
+  );
+});
+
+// Service Worker الوظائف الإضافية
+
+// وظيفة التنبيه المجدولة للتذكير بمواعيد الاستحقاق
+self.addEventListener('periodicsync', event => {
+  if (event.tag === 'check-due-dates') {
+    event.waitUntil(checkDueDates());
+  }
+});
+
+async function checkDueDates() {
+  try {
+    const dueDate = await getDueDateFromLocalStorage();
+    const today = new Date();
+    const dueDateObj = new Date(dueDate);
+    
+    // التحقق مما إذا كان تاريخ الاستحقاق اليوم أو غدًا
+    const diffTime = dueDateObj - today;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) {
+      // إذا كان اليوم هو تاريخ الاستحقاق
+      showDueDateNotification('اليوم هو موعد استحقاق الأرباح الخاصة بك');
+    } else if (diffDays === 1) {
+      // إذا كان غدًا هو تاريخ الاستحقاق
+      showDueDateNotification('غدًا هو موعد استحقاق الأرباح الخاصة بك');
+    }
+  } catch (error) {
+    console.error('Error checking due dates:', error);
+  }
+}
+
+// عرض إشعار بتاريخ الاستحقاق
+function showDueDateNotification(message) {
+  const options = {
+    body: message,
+    icon: '/logo.png',
+    badge: '/logo.png',
+    data: {
+      url: '/profits'
+    },
+    dir: 'rtl',
+    vibrate: [100, 50, 100],
+    actions: [
+      {
+        action: 'open',
+        title: 'عرض التفاصيل'
+      }
+    ]
+  };
+  
+  self.registration.showNotification('تذكير بموعد الأرباح', options);
+}
+
+// الحصول على تاريخ الاستحقاق من التخزين المحلي
+async function getDueDateFromLocalStorage() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('InvestorPortfolioDB', 1);
+    
+    request.onerror = event => {
+      reject('Error opening database');
+    };
+    
+    request.onsuccess = event => {
+      const db = event.target.result;
+      try {
+        const transaction = db.transaction(['investorData'], 'readonly');
+        const store = transaction.objectStore('investorData');
+        
+        const getRequest = store.get('dueDate');
+        
+        getRequest.onsuccess = () => {
+          resolve(getRequest.result || null);
+        };
+        
+        getRequest.onerror = () => {
+          reject('Error getting due date');
+        };
+      } catch (error) {
+        reject(error);
+      }
+    };
+    
+    // إنشاء قاعدة البيانات إذا لم تكن موجودة
+    request.onupgradeneeded = event => {
+      const db = event.target.result;
+      db.createObjectStore('investorData');
+      db.createObjectStore('pendingTransactions', { keyPath: 'id', autoIncrement: true });
+    };
+  });
+}
+
+// التحقق من وجود تحديثات للتطبيق
+async function checkForAppUpdates() {
+  try {
+    const response = await fetch('/version.json', { cache: 'no-cache' });
+    
+    if (response.ok) {
+      const data = await response.json();
+      const localVersion = localStorage.getItem('appVersion');
+      
+      if (localVersion && localVersion !== data.version) {
+        // إشعار المستخدم بوجود تحديث جديد
+        self.clients.matchAll().then(clients => {
+          clients.forEach(client => {
+            client.postMessage({
+              type: 'UPDATE_AVAILABLE',
+              version: data.version
+            });
+          });
+        });
+      }
+    }
+  } catch (error) {
+    console.error('Error checking for updates:', error);
+  }
+}
+
+// فحص التحديثات كل ساعة
+setInterval(checkForAppUpdates, 60 * 60 * 1000);
+
+console.log('Service Worker تم تسجيله بنجاح!');
+
+// تهيئة قاعدة بيانات IndexedDB
+function initializeDatabase() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open('InvestorPortfolioDB', 1);
+        
+        request.onerror = (event) => {
+            console.error('خطأ في فتح قاعدة البيانات:', event.target.error);
+            reject(event.target.error);
+        };
+        
+        request.onsuccess = (event) => {
+            console.log('تم فتح قاعدة البيانات بنجاح');
+            resolve(event.target.result);
+        };
+        
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            
+            // إنشاء مخازن البيانات إذا لم تكن موجودة
+            if (!db.objectStoreNames.contains('investorData')) {
+                db.createObjectStore('investorData', { keyPath: 'id' });
+                console.log('تم إنشاء مخزن بيانات المستثمر');
+            }
+            
+            if (!db.objectStoreNames.contains('pendingTransactions')) {
+                db.createObjectStore('pendingTransactions', { keyPath: 'id', autoIncrement: true });
+                console.log('تم إنشاء مخزن المعاملات المعلقة');
+            }
+            
+            if (!db.objectStoreNames.contains('appSettings')) {
+                db.createObjectStore('appSettings', { keyPath: 'key' });
+                console.log('تم إنشاء مخزن إعدادات التطبيق');
+            }
+        };
+    });
+}
+
+// حفظ بيانات المستثمر محلياً
+async function saveInvestorDataLocally(investorData) {
+    try {
+        const db = await openDatabase();
+        const transaction = db.transaction(['investorData'], 'readwrite');
+        const store = transaction.objectStore('investorData');
+        
+        // حفظ بيانات المستثمر الأساسية
+        await store.put({
+            id: 'currentInvestor',
+            ...investorData,
+            lastUpdated: new Date().toISOString()
+        });
+        
+        // حفظ تاريخ الاستحقاق بشكل منفصل للوصول السريع
+        if (investorData.dueDate) {
+            await store.put({
+                id: 'dueDate',
+                date: investorData.dueDate,
+                lastUpdated: new Date().toISOString()
+            });
+        }
+        
+        console.log('تم حفظ بيانات المستثمر محلياً');
+        return true;
+    } catch (error) {
+        console.error('خطأ في حفظ بيانات المستثمر محلياً:', error);
+        return false;
+    }
+}
+
+// حفظ معاملة معلقة عندما يكون الاتصال غير متوفر
+async function savePendingTransaction(transaction) {
+    try {
+        const db = await openDatabase();
+        const tx = db.transaction(['pendingTransactions'], 'readwrite');
+        const store = tx.objectStore('pendingTransactions');
+        
+        // إضافة طابع زمني للمعاملة
+        const pendingTransaction = {
+            ...transaction,
+            timestamp: new Date().toISOString(),
+            synced: false
+        };
+        
+        await store.add(pendingTransaction);
+        
+        // جدولة عملية مزامنة عندما يعود الاتصال
+        if ('serviceWorker' in navigator && 'SyncManager' in window) {
+            const registration = await navigator.serviceWorker.ready;
+            await registration.sync.register('sync-transactions');
+        }
+        
+        console.log('تم حفظ المعاملة محلياً للمزامنة لاحقاً');
+        return true;
+    } catch (error) {
+        console.error('خطأ في حفظ المعاملة المعلقة:', error);
+        return false;
+    }
+}
+
+// مساعد لفتح قاعدة البيانات
+function openDatabase() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open('InvestorPortfolioDB', 1);
+        
+        request.onerror = (event) => {
+            reject(event.target.error);
+        };
+        
+        request.onsuccess = (event) => {
+            resolve(event.target.result);
+        };
+    });
+}
+
+// تسجيل مستمع لرسائل Service Worker
+function setupServiceWorkerMessaging() {
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            if (event.data && event.data.type) {
+                switch (event.data.type) {
+                    case 'SYNC_COMPLETE':
+                        showNotification(event.data.message, 'success');
+                        // تحديث واجهة المستخدم بعد المزامنة
+                        refreshData();
+                        break;
+                        
+                    case 'UPDATE_AVAILABLE':
+                        showUpdateNotification(event.data.version);
+                        break;
+                }
+            }
+        });
+    }
+}
+
+// عرض إشعار تحديث التطبيق
+function showUpdateNotification(version) {
+    const updateBanner = document.createElement('div');
+    updateBanner.className = 'update-banner';
+    updateBanner.innerHTML = `
+        <div class="update-content">
+            <i class="fas fa-sync-alt"></i>
+            <div>
+                <div class="update-title">يتوفر تحديث جديد (الإصدار ${version})</div>
+                <div class="update-message">يرجى تحديث التطبيق للحصول على أحدث الميزات والتحسينات</div>
+            </div>
+        </div>
+        <div class="update-actions">
+            <button id="update-now" class="btn-update">تحديث الآن</button>
+            <button id="update-later" class="btn-later">لاحقاً</button>
+        </div>
+    `;
+    
+    document.body.appendChild(updateBanner);
+    
+    // إضافة أنماط CSS
+    const style = document.createElement('style');
+    style.textContent = `
+        .update-banner {
+            position: fixed;
+            bottom: 80px;
+            left: 16px;
+            right: 16px;
+            background: var(--card-bg);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-xl);
+            padding: 16px;
+            z-index: 1000;
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        .update-content {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .update-content i {
+            background: var(--color-primary-light);
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 12px;
+            font-size: 1.2rem;
+        }
+        
+        .update-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .update-message {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        
+        .update-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+        
+        .btn-update {
+            background: var(--color-primary);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: var(--radius-md);
+            font-weight: 500;
+            cursor: pointer;
+        }
+        
+        .btn-later {
+            background: transparent;
+            border: none;
+            padding: 8px 16px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    `;
+    
+    document.head.appendChild(style);
+    
+    // إضافة معالجات الأحداث
+    document.getElementById('update-now').addEventListener('click', () => {
+        // تحديث الصفحة للحصول على أحدث إصدار
+        window.location.reload(true);
+    });
+    
+    document.getElementById('update-later').addEventListener('click', () => {
+        // إزالة البانر
+        updateBanner.remove();
+    });
+}
+
+// تسجيل Service Worker
+async function registerServiceWorker() {
+    if ('serviceWorker' in navigator) {
+        try {
+            const registration = await navigator.serviceWorker.register('/service-worker.js');
+            console.log('تم تسجيل Service Worker بنجاح:', registration.scope);
+            
+            // التحقق من وجود تحديثات للـ Service Worker
+            registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        // يوجد تحديث جديد جاهز للتثبيت
+                        showNotification('يتوفر تحديث جديد للتطبيق', 'info');
+                    }
+                });
+            });
+            
+            return registration;
+        } catch (error) {
+            console.error('فشل تسجيل Service Worker:', error);
+            return null;
+        }
+    }
+    return null;
+}
+
+// طلب أذونات الإشعارات
+async function requestNotificationPermission() {
+    if ('Notification' in window) {
+        const permission = await Notification.requestPermission();
+        
+        if (permission === 'granted') {
+            console.log('تم الحصول على إذن الإشعارات');
+            return true;
+        } else {
+            console.log('تم رفض إذن الإشعارات');
+            return false;
+        }
+    }
+    return false;
+}
+
+// تسجيل لتلقي الإشعارات في الخلفية
+async function subscribeToPushNotifications(registration) {
+    try {
+        const subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array('YOUR_PUBLIC_VAPID_KEY')
+        });
+        
+        // إرسال الاشتراك إلى الخادم
+        await sendSubscriptionToServer(subscription);
+        
+        console.log('تم الاشتراك في إشعارات Push بنجاح');
+        return subscription;
+    } catch (error) {
+        console.error('فشل الاشتراك في إشعارات Push:', error);
+        return null;
+    }
+}
+
+// مساعد لتحويل مفتاح VAPID من Base64 إلى مصفوفة Uint8Array
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding)
+        .replace(/-/g, '+')
+        .replace(/_/g, '/');
+    
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    
+    return outputArray;
+}
+
+// إرسال اشتراك الإشعارات إلى الخادم
+async function sendSubscriptionToServer(subscription) {
+    try {
+        // هنا يتم الاتصال بالخادم لحفظ اشتراك الإشعارات
+        // الشيفرة التالية تمثل طريقة افتراضية، يجب تعديلها حسب واجهة API الخاصة بالخادم
+        
+        /*
+        const response = await fetch('/api/push-subscriptions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                subscription: subscription,
+                userId: currentUser ? currentUser.uid : null
+            }),
+        });
+        
+        if (!response.ok) {
+            throw new Error('فشل تسجيل الاشتراك في الخادم');
+        }
+        */
+        
+        console.log('تم إرسال اشتراك الإشعارات إلى الخادم بنجاح');
+        return true;
+    } catch (error) {
+        console.error('فشل إرسال اشتراك الإشعارات إلى الخادم:', error);
+        return false;
+    }
+}
+
+// تمكين المزامنة في الخلفية
+async function registerBackgroundSync(registration) {
+    if ('SyncManager' in window) {
+        try {
+            // تسجيل مزامنة المعاملات
+            await registration.sync.register('sync-transactions');
+            
+            // تسجيل فحص دوري لتواريخ الاستحقاق (إذا كان مدعومًا)
+            if ('PeriodicSyncManager' in registration) {
+                await registration.periodicSync.register('check-due-dates', {
+                    minInterval: 24 * 60 * 60 * 1000 // مرة واحدة يوميًا
+                });
+            }
+            
+            console.log('تم تسجيل المزامنة في الخلفية بنجاح');
+            return true;
+        } catch (error) {
+            console.error('فشل تسجيل المزامنة في الخلفية:', error);
+            return false;
+        }
+    }
+    
+    console.log('المزامنة في الخلفية غير مدعومة في هذا المتصفح');
+    return false;
+}
+
+// الدالة الرئيسية لتهيئة ميزات التطبيق المتقدمة
+async function initializeAppFeatures() {
+    try {
+        // تهيئة قاعدة البيانات المحلية
+        await initializeDatabase();
+        
+        // تسجيل Service Worker
+        const registration = await registerServiceWorker();
+        
+        if (registration) {
+            // إعداد مستمع رسائل Service Worker
+            setupServiceWorkerMessaging();
+            
+            // طلب إذن الإشعارات
+            const notificationsEnabled = await requestNotificationPermission();
+            
+            if (notificationsEnabled) {
+                // الاشتراك في إشعارات Push
+                await subscribeToPushNotifications(registration);
+            }
+            
+            // تمكين المزامنة في الخلفية
+            await registerBackgroundSync(registration);
+        }
+        
+        console.log('تم تهيئة ميزات التطبيق المتقدمة بنجاح');
+        return true;
+    } catch (error) {
+        console.error('فشل تهيئة ميزات التطبيق المتقدمة:', error);
+        return false;
+    }
+}
+
+// تنفيذ التهيئة عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', async () => {
+    // تهيئة التطبيق الأساسية
+    initApp();
+    
+    // تهيئة الميزات المتقدمة
+    await initializeAppFeatures();
+    
+    console.log('تم تهيئة التطبيق بالكامل');
+});
+
+// مراقبة حالة الاتصال بالشبكة
+window.addEventListener('online', async () => {
+    // محاولة مزامنة البيانات المعلقة عند استعادة الاتصال
+    if ('serviceWorker' in navigator && 'SyncManager' in window) {
+        const registration = await navigator.serviceWorker.ready;
+        await registration.sync.register('sync-transactions');
+    }
+    
+    showNotification('تم استعادة الاتصال بالإنترنت', 'success');
+    
+    if (currentInvestor) {
+        refreshData();
+    }
+});
+
+window.addEventListener('offline', () => {
+    showNotification('أنت الآن في وضع عدم الاتصال، سيتم حفظ التغييرات محليًا ومزامنتها لاحقًا', 'warning');
+});
+
+// حفظ إصدار التطبيق الحالي في التخزين المحلي
+localStorage.setItem('appVersion', '2.0.0');
+
+console.log('تم تهيئة تطبيق محفظة المستثمر');
+
+
+</script>
+</body>
+</html>

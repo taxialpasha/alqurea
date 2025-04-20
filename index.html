@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html dir="rtl" lang="ar">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#6366f1">
+    <link rel="manifest" href="manifest.json">
+    <title>محفظة المستثمر</title>
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Main Auth Screen -->
+    <div id="auth-screen" class="auth-container">
+        <div class="auth-bg-pattern"></div>
+        <div class="auth-logo">
+            <i class="fas fa-wallet"></i>
+        </div>
+        <h1 class="auth-title">محفظة المستثمر</h1>
+        <p class="auth-subtitle">قم بتسجيل الدخول لإدارة استثماراتك بكل سهولة</p>
+        
+        <!-- Login Form -->
+        <div id="login-form" class="auth-form">
+            <div class="form-group">
+                <label class="form-label">البريد الإلكتروني</label>
+                <input type="email" id="login-email" class="form-input" placeholder="أدخل البريد الإلكتروني" dir="ltr" required>
+                <div class="form-error" id="login-email-error"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">كلمة المرور</label>
+                <input type="password" id="login-password" class="form-input" placeholder="أدخل كلمة المرور" dir="ltr" required>
+                <div class="form-error" id="login-password-error"></div>
+            </div>
+            <button id="login-btn" class="btn">
+                <i class="fas fa-sign-in-alt btn-icon"></i>
+                تسجيل الدخول
+            </button>
+            <div class="auth-toggle">
+                ليس لديك حساب؟ <a href="#" id="show-register">إنشاء حساب جديد</a>
+            </div>
+        </div>
+        
+        <!-- Register Form -->
+        <div id="register-form" class="auth-form" style="display: none;">
+            <div class="form-group">
+                <label class="form-label">الاسم الكامل</label>
+                <input type="text" id="register-name" class="form-input" placeholder="أدخل الاسم الكامل" required>
+                <div class="form-error" id="register-name-error"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">البريد الإلكتروني</label>
+                <input type="email" id="register-email" class="form-input" placeholder="أدخل البريد الإلكتروني" dir="ltr" required>
+                <div class="form-error" id="register-email-error"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">كلمة المرور</label>
+                <input type="password" id="register-password" class="form-input" placeholder="أدخل كلمة المرور (6 أحرف على الأقل)" dir="ltr" required>
+                <div class="form-error" id="register-password-error"></div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">تأكيد كلمة المرور</label>
+                <input type="password" id="register-confirm-password" class="form-input" placeholder="أعد إدخال كلمة المرور" dir="ltr" required>
+                <div class="form-error" id="register-confirm-password-error"></div>
+            </div>
+            <button id="register-btn" class="btn">
+                <i class="fas fa-user-plus btn-icon"></i>
+                إنشاء حساب
+            </button>
+            <div class="auth-toggle">
+                لديك حساب بالفعل؟ <a href="#" id="show-login">تسجيل الدخول</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Investor Verification Screen -->
+    <div id="investor-verify-screen" class="investor-verify-container" style="display: none;">
+        <div class="investor-verify-card">
+            <div class="investor-verify-icon">
+                <i class="fas fa-user-shield"></i>
+            </div>
+            <h2 class="investor-verify-title">تحقق من هويتك كمستثمر</h2>
+            <p class="investor-verify-subtitle">قم بإدخال معرف المستثمر ورقم الهاتف للوصول إلى بياناتك الاستثمارية</p>
+            
+            <div class="auth-form" style="padding: 0; background: none; backdrop-filter: none; box-shadow: none;">
+                <div class="form-group">
+                    <label class="form-label">معرف المستثمر (ID)</label>
+                    <input type="text" id="investor-id-input" class="form-input" placeholder="أدخل معرف المستثمر" required>
+                    <div class="form-error" id="investor-id-error"></div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">رقم الهاتف</label>
+                    <input type="tel" id="investor-phone-input" class="form-input" placeholder="أدخل رقم الهاتف" dir="ltr" required>
+                    <small class="verify-note">مثال: 07813798678</small>
+                    <div class="form-error" id="investor-phone-error"></div>
+                </div>
+                <button id="verify-btn" class="btn btn-primary">
+                    <i class="fas fa-check-circle btn-icon"></i>
+                    التحقق والدخول
+                </button>
+                <button id="logout-auth-btn" class="btn btn-secondary" style="margin-top: var(--spacing-4);">
+                    <i class="fas fa-sign-out-alt btn-icon"></i>
+                    تسجيل الخروج
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="header" style="display: none;">
+        <h1>محفظة المستثمر</h1>
+        <div class="header-icon" id="refresh-icon">
+            <i class="fas fa-sync-alt"></i>
+        </div>
+    </header>
+
+    <!-- App Container -->
+    <div id="app" class="app-container" style="display: none;">
+        <!-- Home Page -->
+        <div id="home-page" class="page active">
+            <div class="balance-card">
+                <div class="balance-card-pattern"></div>
+                <div class="balance-card-header">
+                    <div>
+                        <div class="balance-label">رصيدك الاستثماري</div>
+                        <div id="total-balance" class="balance-amount">0 دينار</div>
+                    </div>
+                    <div class="header-icon">
+                        <i class="fas fa-wallet"></i>
+                    </div>
+                </div>
+                <div class="balance-details">
+                    <div class="balance-detail">
+                        <div class="balance-detail-label">الأرباح المستحقة</div>
+                        <div id="pending-profits" class="balance-detail-value">0 دينار</div>
+                    </div>
+                    <div class="balance-detail">
+                        <div class="balance-detail-label">نسبة الربح</div>
+                        <div id="interest-rate" class="balance-detail-value">17.5%</div>
+                    </div>
+                    <div class="balance-detail">
+                        <div class="balance-detail-label">تاريخ الاستحقاق</div>
+                        <div id="due-date" class="balance-detail-value">--</div>
+                    </div>
+                    <div class="balance-detail">
+                        <div class="balance-detail-label">الربح الشهري</div>
+                        <div id="monthly-profit" class="balance-detail-value">0 دينار</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="quick-actions">
+                <a href="#" class="quick-action" id="show-deposit">
+                    <i class="fas fa-arrow-up"></i>
+                    <span>إيداع</span>
+                </a>
+                <a href="#" class="quick-action" id="show-withdraw">
+                    <i class="fas fa-arrow-down"></i>
+                    <span>سحب</span>
+                </a>
+                <a href="#" class="quick-action" id="show-transactions">
+                    <i class="fas fa-history"></i>
+                    <span>العمليات</span>
+                </a>
+                <a href="#" class="quick-action" id="show-profits">
+                    <i class="fas fa-coins"></i>
+                    <span>الأرباح</span>
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-chart-line"></i>
+                        <span>تطور الاستثمار</span>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="investment-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>أحدث العمليات</span>
+                    </div>
+                    <div class="card-action" id="view-all-transactions">عرض الكل</div>
+                </div>
+                <div id="recent-transactions" class="transaction-list">
+                    <!-- سيتم ملؤها ديناميكياً -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Transactions Page -->
+        <div id="transactions-page" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-exchange-alt"></i>
+                        <span>جميع العمليات</span>
+                    </div>
+                </div>
+                <div class="stats-grid">
+                    <div class="stats-card success">
+                        <div class="stats-label">إجمالي الإيداعات</div>
+                        <div id="total-deposits" class="stats-value">0 دينار</div>
+                    </div>
+                    <div class="stats-card warning">
+                        <div class="stats-label">إجمالي السحوبات</div>
+                        <div id="total-withdrawals" class="stats-value">0 دينار</div>
+                    </div>
+                </div>
+                <div id="all-transactions" class="transaction-list">
+                    <!-- سيتم ملؤها ديناميكياً -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Profits Page -->
+        <div id="profits-page" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-coins"></i>
+                        <span>الأرباح المستحقة</span>
+                    </div>
+                </div>
+                <div id="profits-details">
+                    <!-- سيتم ملؤها ديناميكياً -->
+                </div>
+                <div class="chart-container">
+                    <canvas id="profits-chart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div id="settings-page" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-user"></i>
+                        <span>معلومات المستثمر</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">الاسم</label>
+                    <input type="text" id="investor-name" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">رقم الهاتف</label>
+                    <input type="text" id="investor-phone" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">البريد الإلكتروني</label>
+                    <input type="text" id="investor-email" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">العنوان</label>
+                    <input type="text" id="investor-address" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">رقم البطاقة</label>
+                    <input type="text" id="investor-card" class="form-input" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">تاريخ الانضمام</label>
+                    <input type="text" id="investor-join-date" class="form-input" readonly>
+                </div>
+                <button id="logout-btn" class="btn btn-danger" style="margin-top: var(--spacing-6);">
+                    <i class="fas fa-sign-out-alt btn-icon"></i>
+                    تسجيل الخروج
+                </button>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-palette"></i>
+                        <span>مظهر التطبيق</span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">وضع العرض</label>
+                    <select id="theme-selector" class="form-input">
+                        <option value="system">تلقائي (حسب النظام)</option>
+                        <option value="light">وضع النهار</option>
+                        <option value="dark">وضع الليل</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">
+                        <i class="fas fa-info-circle"></i>
+                        <span>عن التطبيق</span>
+                    </div>
+                </div>
+                <div style="text-align: center; padding: var(--spacing-4) 0;">
+                    <img src="assets/logo.png" alt="شعار التطبيق" style="width: 80px; height: 80px; border-radius: var(--radius-md); margin-bottom: var(--spacing-4); background: var(--color-gray-100);">
+                    <h3 style="margin-bottom: var(--spacing-2);">محفظة المستثمر</h3>
+                    <p style="color: var(--color-gray-500); margin-bottom: var(--spacing-4);">الإصدار 2.0.0</p>
+                    <p style="color: var(--color-gray-600); font-size: 0.9rem;">تطبيق لإدارة استثماراتك بكل سهولة وأمان</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav" style="display: none;">
+        <div class="nav-item active" data-page="home">
+            <i class="fas fa-home"></i>
+            <span>الرئيسية</span>
+        </div>
+        <div class="nav-item" data-page="transactions">
+            <i class="fas fa-exchange-alt"></i>
+            <span>العمليات</span>
+        </div>
+        <div class="nav-item" data-page="profits">
+            <i class="fas fa-chart-line"></i>
+            <span>الأرباح</span>
+        </div>
+        <div class="nav-item" data-page="settings">
+            <i class="fas fa-user"></i>
+            <span>الإعدادات</span>
+        </div>
+    </nav>
+
+    <!-- Loading Spinner -->
+    <div id="spinner" class="spinner"></div>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <div class="notification-icon">
+            <i class="fas fa-info-circle"></i>
+        </div>
+        <div id="notification-text"></div>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="app.js"></script>
+    <script src="charts.js"></script>
+</body>
+</html>
