@@ -1415,14 +1415,12 @@ function showFieldError(fieldId, message) {
 // PWA Support
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./service-worker.js', {
-            scope: './'
-        })
+        navigator.serviceWorker.register('/service-worker.js')
             .then(registration => {
-                console.log('تم تسجيل Service Worker بنجاح، نطاق: ', registration.scope);
+                console.log('ServiceWorker registration successful');
             })
             .catch(err => {
-                console.error('فشل في تسجيل Service Worker: ', err);
+                console.log('ServiceWorker registration failed: ', err);
             });
     });
 }
